@@ -39,8 +39,10 @@ namespace MaitlandsInterfaceFramework.Services.Internals.Http
             {
                 y.ViewLocationFormats.Clear();
                 y.ViewLocationFormats.Add("/Services/Internals/Http/Views/{1}/{0}.cshtml");
+                y.ViewLocationFormats.Add("/Views/{1}/{0}.cshtml");
 
-                y.FileProviders.Add(new EmbeddedFileProvider(Assembly.GetExecutingAssembly()));
+                y.FileProviders.Add(new EmbeddedFileProvider(typeof(Startup).Assembly));
+                y.FileProviders.Add(new EmbeddedFileProvider(Assembly.GetEntryAssembly()));
             });
         }
 

@@ -52,6 +52,9 @@ namespace MaitlandsInterfaceFramework
                 if (Config == null)
                     Config = ConfigurationService.LoadConfiguration();
 
+                WriteToLog($"Binding Port: {Config.BindingPort}");
+                WriteToLog($"Binding Path: {Config.BindingPath}");
+
                 if (!HaveVisibleConsole())
                 {
                     WriteToLog("Running as service");

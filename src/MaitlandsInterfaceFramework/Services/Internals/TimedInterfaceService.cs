@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 
 namespace MaitlandsInterfaceFramework.Services.Internals
 {
@@ -41,23 +42,13 @@ namespace MaitlandsInterfaceFramework.Services.Internals
             // Create a timer for each interface
             foreach (TimedInterface timedInterface in this.TimedInterfaces)
             {
-                if (!timedInterface.IsEnabled)
-                    continue;
-
                 TimedInterfaceServiceTimer timer = new TimedInterfaceServiceTimer(timedInterface);
                 timer.Elapsed += this.Timer_Elapsed;
 
                 timedInterface.Timer = timer;
 
                 // Execute the interface initially, otherwise will have to wait for the first timer to elapse before anything happens.
-                try
-                {
-                    await timedInterface.Execute();
-                }
-                catch (Exception ex)
-                {
-                    await ex.LogException();
-                }
+                await this.ExecuteInterface(timedInterface);
 
                 timer.Start();
             }
@@ -70,7 +61,25 @@ namespace MaitlandsInterfaceFramework.Services.Internals
 
             try
             {
-                await serviceTimer.TimedInterface.Execute();
+                await this.ExecuteInterface(serviceTimer.TimedInterface);
+            }
+            finally
+            {
+                serviceTimer.Start();
+            }
+        }
+
+        private async Task ExecuteInterface (TimedInterface timedInterface)
+        {
+            // Every time this interface is executed, check if it's enabled.
+            if (!timedInterface.IsEnabled)
+                return;
+
+            try
+            {
+                // Load the configuration data associated with the TimedInterface before each execution
+                ConfigurationService.LoadConfiguration(timedInterface);
+                await timedInterface.Execute();
             }
             catch (Exception ex)
             {
@@ -78,7 +87,8 @@ namespace MaitlandsInterfaceFramework.Services.Internals
             }
             finally
             {
-                serviceTimer.Start();
+                // Save the configuration data after each execution of the TimedInterface
+                ConfigurationService.SaveConfiguration(timedInterface);
             }
         }
 

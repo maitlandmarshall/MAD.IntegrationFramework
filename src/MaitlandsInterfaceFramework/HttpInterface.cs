@@ -2,7 +2,7 @@
 
 namespace MaitlandsInterfaceFramework
 {
-    public abstract class HttpInterface : ControllerBase
+    public abstract class HttpInterface : Controller
     {
     }
 }

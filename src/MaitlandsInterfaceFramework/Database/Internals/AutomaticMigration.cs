@@ -23,9 +23,10 @@ namespace MaitlandsInterfaceFramework.Database.Internals
                                 tableName
                             }
                         ).FirstOrDefault();
+
                 bool tableExists = !String.IsNullOrEmpty(tableType);
 
-                if (!tableExists)
+                if (tableExists)
                     continue;
 
                 if (tableType!.ToUpper() == "VIEW")
