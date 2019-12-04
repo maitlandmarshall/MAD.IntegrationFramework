@@ -3,11 +3,17 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.29503.13
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MaitlandsInterfaceFramework", "MaitlandsInterfaceFramework\MaitlandsInterfaceFramework.csproj", "{2762EBB0-6CAE-48F3-9FB6-7288CD8D3153}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MaitlandsInterfaceFramework", "MaitlandsInterfaceFramework\MaitlandsInterfaceFramework.csproj", "{2762EBB0-6CAE-48F3-9FB6-7288CD8D3153}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{A00A5C87-EB84-4C67-9C88-C9766266889D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MaitlandsInterfaceFramework.Tests", "MaitlandsInterfaceFramework.Tests\MaitlandsInterfaceFramework.Tests.csproj", "{1D9126F3-174C-4EA5-A19B-EE672CDAC67E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MaitlandsInterfaceFramework.Tests", "MaitlandsInterfaceFramework.Tests\MaitlandsInterfaceFramework.Tests.csproj", "{1D9126F3-174C-4EA5-A19B-EE672CDAC67E}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MaitlandsInterfaceFramework.LinkedIn", "MaitlandsInterfaceFramework.LinkedIn\MaitlandsInterfaceFramework.LinkedIn.csproj", "{4B68694C-C25F-40A2-9C94-3CAF97EA7A79}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MaitlandsInterfaceFramework.Core", "MaitlandsInterfaceFramework.Core\MaitlandsInterfaceFramework.Core.csproj", "{42C0C688-DB2E-4E21-B8C4-5E33BFE69E0C}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "APIs", "APIs", "{7DB5F620-7A1F-4D93-A756-F2A16604C02B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -23,12 +29,21 @@ Global
 		{1D9126F3-174C-4EA5-A19B-EE672CDAC67E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1D9126F3-174C-4EA5-A19B-EE672CDAC67E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1D9126F3-174C-4EA5-A19B-EE672CDAC67E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4B68694C-C25F-40A2-9C94-3CAF97EA7A79}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4B68694C-C25F-40A2-9C94-3CAF97EA7A79}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4B68694C-C25F-40A2-9C94-3CAF97EA7A79}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4B68694C-C25F-40A2-9C94-3CAF97EA7A79}.Release|Any CPU.Build.0 = Release|Any CPU
+		{42C0C688-DB2E-4E21-B8C4-5E33BFE69E0C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{42C0C688-DB2E-4E21-B8C4-5E33BFE69E0C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{42C0C688-DB2E-4E21-B8C4-5E33BFE69E0C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{42C0C688-DB2E-4E21-B8C4-5E33BFE69E0C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{1D9126F3-174C-4EA5-A19B-EE672CDAC67E} = {A00A5C87-EB84-4C67-9C88-C9766266889D}
+		{4B68694C-C25F-40A2-9C94-3CAF97EA7A79} = {7DB5F620-7A1F-4D93-A756-F2A16604C02B}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {A3104704-16DA-4E62-8A60-10EBEE01BDEC}

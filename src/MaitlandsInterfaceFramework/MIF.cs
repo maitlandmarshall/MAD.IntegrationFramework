@@ -1,4 +1,5 @@
-﻿using MaitlandsInterfaceFramework.Configuration;
+﻿using MaitlandsInterfaceFramework.Core.Services.Internals;
+using MaitlandsInterfaceFramework.Core.Configuration;
 using MaitlandsInterfaceFramework.Services.Internals;
 using MaitlandsInterfaceFramework.Services.Internals.Http;
 using Microsoft.Extensions.DependencyInjection;
@@ -37,20 +38,27 @@ namespace MaitlandsInterfaceFramework
 
         #endregion
 
-        public static MIFConfig Config { get; internal set; }
-
         internal static TimedInterfaceService TimedInterfaceService { get; private set; }
         internal static HttpService HttpServer { get; private set; }
         internal static CancellationTokenSource ServiceCancellationToken { get; private set; }
+        
+        public static MIFConfig Config
+        {
+            get => MIFConfig.Instance;
+        }
+
+        public static void SetConfigForTesting(MIFConfig config)
+        {
+            MIFConfig.Instance = config;
+        }
 
         public static void Start(MIFStartupProperties properties = null)
         {
-            WriteToLog($"MIF Initializing {DateTime.Now}");
+            WriteToLog($"MIF initializing {DateTime.Now}");
 
             try
             {
-                if (Config == null)
-                    Config = ConfigurationService.LoadConfiguration();
+                ConfigurationService.LoadConfiguration();
 
                 WriteToLog($"Binding Port: {Config.BindingPort}");
                 WriteToLog($"Binding Path: {Config.BindingPath}");

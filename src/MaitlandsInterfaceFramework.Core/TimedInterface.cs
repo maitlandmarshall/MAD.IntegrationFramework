@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 
-namespace MaitlandsInterfaceFramework
+[assembly: InternalsVisibleTo("MaitlandsInterfaceFramework")]
+namespace MaitlandsInterfaceFramework.Core
 {
     public abstract class TimedInterface
     {

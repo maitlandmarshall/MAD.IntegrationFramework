@@ -15,12 +15,16 @@ namespace MaitlandsInterfaceFramework.Database.Internals
             foreach (IEntityType entityType in dbContext.Model.GetEntityTypes())
             {
                 string tableName = entityType.GetTableName();
+
+                if (String.IsNullOrEmpty(tableName))
+                    continue;
+
                 string tableType = dbContext.Connection
                         .Query<string>(
                             sql: "SELECT TABLE_TYPE FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = @TableName",
                             param: new
                             {
-                                tableName
+                                TableName = tableName
                             }
                         ).FirstOrDefault();
 
@@ -29,10 +33,7 @@ namespace MaitlandsInterfaceFramework.Database.Internals
                 if (tableExists)
                     continue;
 
-                if (tableType!.ToUpper() == "VIEW")
-                    continue;
-
-                WriteToLog($"Creating {tableName} table.");
+                WriteToLog($"Creating {tableName} table");
 
                 StringBuilder queryBuilder = new StringBuilder();
                 queryBuilder.AppendLine($"CREATE TABLE {tableName}");

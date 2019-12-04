@@ -1,12 +1,14 @@
-﻿using MaitlandsInterfaceFramework.Configuration;
+﻿using MaitlandsInterfaceFramework.Core;
+using MaitlandsInterfaceFramework.Core.Configuration;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 
-namespace MaitlandsInterfaceFramework.Services.Internals
+namespace MaitlandsInterfaceFramework.Core.Services.Internals
 {
     internal class ConfigurationService
     {
@@ -16,7 +18,7 @@ namespace MaitlandsInterfaceFramework.Services.Internals
         {
             get
             {
-                return Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
+                return Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
             }
         }
 
@@ -34,16 +36,19 @@ namespace MaitlandsInterfaceFramework.Services.Internals
 
         #region LOAD CONFIGURATION
 
-        public static MIFConfig LoadConfiguration()
+        public static void LoadConfiguration()
         {
-            Type typeWhichInheritsFromMIFConfig = GetConfigurationType();
+            Type typeWhichInheritsFromMIFConfig = GetMifsConfigConfigurationType();
 
             if (!File.Exists(SettingsFilePath))
-                return Activator.CreateInstance(typeWhichInheritsFromMIFConfig) as MIFConfig;
-
-            string settingsData = File.ReadAllText(SettingsFilePath);
-
-            return JsonConvert.DeserializeObject(settingsData, typeWhichInheritsFromMIFConfig) as MIFConfig;
+            {
+                MIFConfig.Instance = Activator.CreateInstance(typeWhichInheritsFromMIFConfig) as MIFConfig;
+            }
+            else
+            {
+                string settingsData = File.ReadAllText(SettingsFilePath);
+                MIFConfig.Instance = JsonConvert.DeserializeObject(settingsData, typeWhichInheritsFromMIFConfig) as MIFConfig;
+            }
         }
 
         public static void LoadConfiguration (TimedInterface timedInterface)
@@ -59,6 +64,9 @@ namespace MaitlandsInterfaceFramework.Services.Internals
                 return;
 
             string timedInterfaceSettingData = File.ReadAllText(timedInterfaceSettingsFilePath);
+
+            if (String.IsNullOrEmpty(timedInterfaceSettingData))
+                return;
 
             Dictionary<string, object> propertiesToLoad = JsonConvert.DeserializeObject<Dictionary<string, object>>(timedInterfaceSettingData);
 
@@ -93,8 +101,7 @@ namespace MaitlandsInterfaceFramework.Services.Internals
 
                 File.WriteAllText(SettingsFilePath, settingsData);
 
-                if (MIF.Config != config)
-                    MIF.Config = config;
+                MIFConfig.Instance = config;
             }
         }
 
@@ -156,7 +163,7 @@ namespace MaitlandsInterfaceFramework.Services.Internals
             return Path.Combine(SettingsDirectory, $"{timedInterface.GetType().Name}.json");
         }
 
-        private static Type GetConfigurationType()
+        private static Type GetMifsConfigConfigurationType()
         {
             Type typeWhichInheritsFromMIFConfig = Assembly.GetEntryAssembly().GetTypes().FirstOrDefault(y => typeof(MIFConfig).IsAssignableFrom(y));
 

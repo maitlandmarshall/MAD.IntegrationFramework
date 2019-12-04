@@ -1,9 +1,11 @@
-﻿using MaitlandsInterfaceFramework.Services.Internals;
+﻿using MaitlandsInterfaceFramework.Core.Services.Internals;
 
-namespace MaitlandsInterfaceFramework.Configuration
+namespace MaitlandsInterfaceFramework.Core.Configuration
 {
     public class MIFConfig
     {
+        public static MIFConfig Instance { get; internal set; }
+
         internal const int DefaultBindingPort = 666;
 
         public string SqlConnectionString { get; set; }
