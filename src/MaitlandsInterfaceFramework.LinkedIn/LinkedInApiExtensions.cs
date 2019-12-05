@@ -1,12 +1,14 @@
 ﻿using MaitlandsInterfaceFramework.Core.Configuration;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Newtonsoft.Json.Serialization;
 using Sparkle.LinkedInNET;
 using Sparkle.LinkedInNET.Common;
 using Sparkle.LinkedInNET.Organizations;
 using Sparkle.LinkedInNET.Profiles;
 using System;
 using System.Collections.Generic;
+using System.Dynamic;
 using System.Linq;
 using System.Text;
 
@@ -36,9 +38,9 @@ namespace MaitlandsInterfaceFramework.LinkedIn
             return result;
         }
 
-        public static LinkedInApiPaginatedResult<LikeElement> GetLikesForShare (this LinkedInApi api, PostShareResult share)
+        public static LinkedInApiPaginatedResult<LikeElement> GetLikesForShare (this LinkedInApi api, PostShareResult share, int count = 500, int start = 0)
         {
-            string apiPath = $"/v2/socialActions/{share.Activity}/likes";
+            string apiPath = $"/v2/socialActions/{share.Activity}/likes?count={count}&start={start}";
 
             string likesJson = api.RawGetJsonQuery(apiPath, LinkedInApiFactory.GetUserAuthorization());
             LinkedInApiPaginatedResult<LikeElement> result = JsonConvert.DeserializeObject<LinkedInApiPaginatedResult<LikeElement>>(likesJson);
@@ -72,6 +74,18 @@ namespace MaitlandsInterfaceFramework.LinkedIn
             }
 
             return result;
+        }
+
+        public static LinkedInApiPaginatedResult<CampaignElement> GetAdCampaigns(this LinkedInApi api, OrgEntElements company)
+        {
+            string campaignsJson = api.RawGetJsonQuery(
+                path: $"/v2/adCampaignsV2?q=search&search.associatedEntity.values[0]={company.OrganizationalTarget}", 
+                user: LinkedInApiFactory.GetUserAuthorization()
+            );
+
+            LinkedInApiPaginatedResult<CampaignElement> campaigns = JsonConvert.DeserializeObject<LinkedInApiPaginatedResult<CampaignElement>>(campaignsJson);
+
+            return campaigns;
         }
     }
 }

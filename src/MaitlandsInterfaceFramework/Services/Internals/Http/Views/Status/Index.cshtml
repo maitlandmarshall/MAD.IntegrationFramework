@@ -1,0 +1,30 @@
+﻿@using System.Reflection;
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Status</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+</head>
+<body>
+
+    @{
+        List<string> modelPropertyNames = (Model as object)
+            .GetType()
+            .GetProperties(System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public)
+            .Select(y => y.Name)
+            .ToList();
+    }
+
+    
+    <div class="container justify-content-left mt-2 form-group">
+        <h1 class="ml-1">@Assembly.GetEntryAssembly().GetName().Name</h1>
+        <p class="ml-1">@Assembly.GetExecutingAssembly().GetName().Name.Split('.')[0] @Assembly.GetExecutingAssembly().GetName().Version</p>
+        
+
+    </div>
+
+</body>
+</html>

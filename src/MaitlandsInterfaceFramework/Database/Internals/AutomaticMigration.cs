@@ -148,7 +148,12 @@ namespace MaitlandsInterfaceFramework.Database.Internals
 
             if (property.IsPrimaryKey())
             {
-                columnBuilder.Append(" IDENTITY(1,1) PRIMARY KEY");
+                if (propertyTypeCode == TypeCode.Int32 || propertyTypeCode == TypeCode.UInt16)
+                {
+                    columnBuilder.Append(" IDENTITY(1,1)");
+                }
+
+                columnBuilder.Append(" PRIMARY KEY");
             }
 
             return columnBuilder.ToString();
