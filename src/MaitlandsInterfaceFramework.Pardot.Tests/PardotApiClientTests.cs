@@ -1,4 +1,5 @@
 ﻿using MaitlandsInterfaceFramework.Core.Configuration;
+using MaitlandsInterfaceFramework.Pardot.Domain;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
 using System;
@@ -29,10 +30,15 @@ namespace MaitlandsInterfaceFramework.Pardot.Tests
             }
         }
 
+        private static PardotApiClient GetClient()
+        {
+            return new PardotApiClient();
+        }
+
         [TestInitialize]
         public void Init()
         {
-            MIF.SetConfigForTesting(new TestConfig());  
+            MIF.SetConfigForTesting(new TestConfig());
         }
 
         [TestMethod]
@@ -40,6 +46,80 @@ namespace MaitlandsInterfaceFramework.Pardot.Tests
         {
             PardotApiClient client = new PardotApiClient();
             await client.LoginAndGetApiKey();
+        }
+
+        [TestMethod]
+        public async Task GetAccountTest()
+        {
+            PardotApiClient client = GetClient();
+
+            Account account = await client.GetAccount();
+
+            Assert.IsNotNull(account);
+        }
+
+        [TestMethod]
+        public async Task GetCampaignsTest()
+        {
+            var campaigns = await this.BulkQueryTest<Campaign>();
+
+            Assert.IsNotNull(campaigns);
+        }
+
+        [TestMethod]
+        public async Task GetCustomRedirectsTest()
+        {
+            var customRedirects = await this.BulkQueryTest<CustomRedirect>();
+
+            Assert.IsNotNull(customRedirects);
+        }
+
+        [TestMethod]
+        public async Task GetEmailClickTest()
+        {
+            var emailClicks = await this.BulkQueryTest<EmailClick>();
+
+            Assert.IsNotNull(emailClicks);
+        }
+
+        [TestMethod]
+        public async Task GetOpportunitiesTest()
+        {
+            var opportunitites = await this.BulkQueryTest<Opportunity>();
+
+            Assert.IsNotNull(opportunitites);
+        }
+
+        [TestMethod]
+        public async Task GetProspectsTest()
+        {
+            var prospects = await this.BulkQueryTest<Prospect>();
+
+            Assert.IsNotNull(prospects);
+        }
+
+        [TestMethod]
+        public async Task GetProspectAccountsTest()
+        {
+            var prospectAccounts = await this.BulkQueryTest<ProspectAccount>();
+
+            Assert.IsNotNull(prospectAccounts);
+        }
+
+        [TestMethod]
+        public async Task GetUsersTest()
+        {
+            var users = await this.BulkQueryTest<User>();
+
+            Assert.IsNotNull(users);
+        }
+
+
+
+        private async Task<IEnumerable<ResponseType>> BulkQueryTest<ResponseType>()
+        {
+            var client = GetClient();
+            return await client.PerformBulkQuery<ResponseType>();
         }
     }
 }
