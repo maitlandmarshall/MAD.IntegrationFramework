@@ -76,7 +76,7 @@ namespace MaitlandsInterfaceFramework.LinkedIn
             return result;
         }
 
-        public static LinkedInApiPaginatedResult<CampaignElement> GetAdCampaigns(this LinkedInApi api, OrgEntElements company)
+        public static LinkedInApiPaginatedResult<CampaignElement> GetAdCampaignsForCompany(this LinkedInApi api, OrgEntElements company)
         {
             string campaignsJson = api.RawGetJsonQuery(
                 path: $"/v2/adCampaignsV2?q=search&search.associatedEntity.values[0]={company.OrganizationalTarget}", 
@@ -86,6 +86,18 @@ namespace MaitlandsInterfaceFramework.LinkedIn
             LinkedInApiPaginatedResult<CampaignElement> campaigns = JsonConvert.DeserializeObject<LinkedInApiPaginatedResult<CampaignElement>>(campaignsJson);
 
             return campaigns;
+        }
+
+        public static CampaignElement GetAdCampaign(this LinkedInApi api, string campaignId)
+        {
+            string campaignJson = api.RawGetJsonQuery(
+                path: $"/v2/adCampaignsV2/{campaignId}",
+                user: LinkedInApiFactory.GetUserAuthorization()
+            );
+
+            CampaignElement campaign = JsonConvert.DeserializeObject<CampaignElement>(campaignJson);
+
+            return campaign;
         }
     }
 }
