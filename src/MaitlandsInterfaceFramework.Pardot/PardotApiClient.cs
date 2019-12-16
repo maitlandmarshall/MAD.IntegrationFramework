@@ -98,6 +98,11 @@ namespace MaitlandsInterfaceFramework.Pardot
             return await this.ExecuteWebRequest<Account>("account/version/4/do/read");
         }
 
+        public async Task<Email> GetEmail(int emailId)
+        {
+            return await this.ExecuteWebRequest<Email>($"email/version/4/do/read/id/{emailId}");
+        }
+
         public async Task<IEnumerable<TargetType>> PerformBulkQuery<TargetType>(BulkQueryParameters parameters = null)
         {
             return await this.ExecuteWebRequest<IEnumerable<TargetType>>($"{typeof(TargetType).Name}/version/4/do/query",

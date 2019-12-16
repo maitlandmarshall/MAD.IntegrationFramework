@@ -1,4 +1,6 @@
-﻿using System;
+﻿using MaitlandsInterfaceFramework.Database;
+using System;
+using System.ComponentModel.DataAnnotations;
 
 namespace MaitlandsInterfaceFramework.Services.Internals
 {

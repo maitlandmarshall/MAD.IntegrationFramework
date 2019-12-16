@@ -114,6 +114,21 @@ namespace MaitlandsInterfaceFramework.Pardot.Tests
             Assert.IsNotNull(users);
         }
 
+        [TestMethod]
+        public async Task GetVisitorsTest()
+        {
+            var visitors = await this.BulkQueryTest<Visitor>();
+
+            Assert.IsNotNull(visitors);
+        }
+
+        [TestMethod]
+        public async Task GetVisitsTest()
+        {
+            var visits = await this.BulkQueryTest<Visit>();
+
+            Assert.IsNotNull(visits);
+        }
 
 
         private async Task<IEnumerable<ResponseType>> BulkQueryTest<ResponseType>()

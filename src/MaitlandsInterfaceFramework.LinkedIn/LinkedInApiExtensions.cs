@@ -6,6 +6,7 @@ using Sparkle.LinkedInNET;
 using Sparkle.LinkedInNET.Common;
 using Sparkle.LinkedInNET.Organizations;
 using Sparkle.LinkedInNET.Profiles;
+using Sparkle.LinkedInNET.Shares;
 using System;
 using System.Collections.Generic;
 using System.Dynamic;
@@ -98,6 +99,47 @@ namespace MaitlandsInterfaceFramework.LinkedIn
             CampaignElement campaign = JsonConvert.DeserializeObject<CampaignElement>(campaignJson);
 
             return campaign;
+        }
+
+        public static JObject GetSocialActionSummary (this LinkedInApi api, params string[] shareUrns)
+        {
+            return JsonConvert.DeserializeObject<JObject>(api.RawGetJsonQuery(
+                path: $"/v2/socialActions?{String.Join("&", shareUrns.Select(y => $"ids={y}"))}",
+                user: LinkedInApiFactory.GetUserAuthorization()
+            ));
+        }
+
+        public static IEnumerable<PostShareResult> GetAllSharesForOrganization(this LinkedInApi api, string organizationUrn)
+        {
+            PostShares sharesPage;
+            HashSet<string> activities = new HashSet<string>();
+            int currentRecordIndex = 0;
+
+            do
+            {
+                sharesPage = api.Shares.GetShares(
+                    user: LinkedInApiFactory.GetUserAuthorization(),
+                    urn: organizationUrn,
+                    sharesPerOwner: 1000,
+                    count: 50,
+                    start: currentRecordIndex
+                 );
+
+                if (sharesPage.Elements.Count == 0)
+                    yield break;
+
+                foreach (PostShareResult share in sharesPage.Elements)
+                {
+                    if (activities.Contains(share.Activity))
+                        continue;
+
+                    yield return share;
+                    activities.Add(share.Activity);
+                }
+
+                currentRecordIndex += sharesPage.Elements.Count;
+
+            } while (sharesPage.Paging.Total > 0);
         }
     }
 }

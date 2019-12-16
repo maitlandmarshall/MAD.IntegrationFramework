@@ -1,0 +1,1 @@
+sc create [Name] binPath= "E:\Path\To\TheExe.exe" DisplayName= "[Display Name]" start= auto
