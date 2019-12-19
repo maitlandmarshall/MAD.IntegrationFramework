@@ -150,12 +150,23 @@ namespace MaitlandsInterfaceFramework.Core.Services.Internals
 
         private static IEnumerable<MemberInfo> GetSavableMembersFromTimedInterface(TimedInterface timedInterface)
         {
+            BindingFlags bindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
+
             IEnumerable<MemberInfo> savableMembers = timedInterface
                 .GetType()
-                .GetMembers(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
-                .Where(y => y.GetCustomAttribute<SavableAttribute>() != null);
+                .GetMembers(bindingFlags)
+                .Where(y => y.GetCustomAttribute<SavableAttribute>(true) != null);
 
-            return savableMembers;
+            IEnumerable<MemberInfo> savableInterfaces = timedInterface
+                .GetType()
+                .GetInterfaces()
+                .SelectMany(y => y.GetMembers(bindingFlags).Where(z => z.GetCustomAttribute<SavableAttribute>(true) != null));
+
+            foreach (MemberInfo savableAttribute in savableMembers)
+                yield return savableAttribute;
+
+            foreach (MemberInfo savableAttribute in savableInterfaces)
+                yield return savableAttribute;
         }
 
         private static string GetTimedInterfaceSettingsFilePath(TimedInterface timedInterface)

@@ -29,7 +29,7 @@ namespace MaitlandsInterfaceFramework.Pardot
                 throw new Exception($"{nameof(MIFConfig)} must implement {nameof(IPardotConfig)}.");
         }
 
-        internal async Task<ResponseType> ExecuteWebRequest<ResponseType>(string relativeUri, params (string argName, object argValue)[] args)
+        internal async Task<ResponseType> ExecuteWebRequest<ResponseType>(string relativeUri, JsonConverter jsonConverter = null, params (string argName, object argValue)[] args)
         {
             if (String.IsNullOrEmpty(this.ApiKey) && relativeUri.Contains("login") == false)
                 await this.LoginAndGetApiKey();
@@ -70,7 +70,17 @@ namespace MaitlandsInterfaceFramework.Pardot
 
                 if (args.Any(y => y.argName == "output" && (y.argValue as string) == "bulk"))
                 {
-                    return result.Last.First.Last.First.ToObject<ResponseType>();
+                    if (jsonConverter != null)
+                    {
+                        JsonSerializer serializer = JsonSerializer.CreateDefault();
+                        serializer.Converters.Add(jsonConverter);
+
+                        return new JArray(result.Last.First.Last.First.ToList()).ToObject<ResponseType>(serializer);
+                    }
+                    else
+                    {
+                        return result.Last.First.Last.First.ToObject<ResponseType>();
+                    }
                 }
                 else
                 {
@@ -85,6 +95,7 @@ namespace MaitlandsInterfaceFramework.Pardot
 
             LoginResponse response = await this.ExecuteWebRequest<LoginResponse>(
                 relativeUri: $"login/version/4",
+                null,
                 ("email", config.PardotEmail), ("password", config.PardotPassword), ("user_key", config.PardotUserKey)
             );
 
@@ -103,9 +114,12 @@ namespace MaitlandsInterfaceFramework.Pardot
             return await this.ExecuteWebRequest<Email>($"email/version/4/do/read/id/{emailId}");
         }
 
-        public async Task<IEnumerable<TargetType>> PerformBulkQuery<TargetType>(BulkQueryParameters parameters = null)
+        public Task<IEnumerable<TargetType>> PerformBulkQuery<TargetType>(BulkQueryParameters parameters = null, JsonConverter jsonConverter = null)
+            => PerformBulkQuery<TargetType>(typeof(TargetType).Name, parameters, jsonConverter);
+            
+        public async Task<IEnumerable<TargetType>> PerformBulkQuery<TargetType>(string pardotApiEndpointName, BulkQueryParameters parameters = null, JsonConverter jsonConverter = null)
         {
-            return await this.ExecuteWebRequest<IEnumerable<TargetType>>($"{typeof(TargetType).Name}/version/4/do/query",
+            return await this.ExecuteWebRequest<List<TargetType>>($"{pardotApiEndpointName}/version/4/do/query", jsonConverter,
                 ("output", "bulk"),
                 ("created_before", parameters?.CreatedBefore),
                 ("created_after", parameters?.CreatedAfter),

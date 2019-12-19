@@ -84,6 +84,11 @@ namespace MaitlandsInterfaceFramework.Services.Internals
             TimedInterfaceDbContext db = null;
             TimedInterfaceLog log = null;
 
+            if (String.IsNullOrEmpty(MIF.Config.SqlConnectionString))
+                return;
+
+            IScheduledInterface scheduledInterface = timedInterface as IScheduledInterface;
+
             try
             {
                 // Load the configuration data associated with the TimedInterface before each execution
@@ -92,6 +97,14 @@ namespace MaitlandsInterfaceFramework.Services.Internals
                 // Every time this interface is executed, check if it's enabled.
                 if (!timedInterface.IsEnabled)
                     return;
+
+                if (scheduledInterface != null && scheduledInterface.LastRunDateTime.HasValue)
+                {
+                    DateTime now = DateTime.Now;
+
+                    if (now < scheduledInterface.NextRunDateTime)
+                        return;
+                }
 
                 // If there is a connection to a datbase, create a log detailing the Start / End date and times the interface ran
                 if (!String.IsNullOrEmpty(MIF.Config.SqlConnectionString))
@@ -114,6 +127,7 @@ namespace MaitlandsInterfaceFramework.Services.Internals
                 }
 
                 await timedInterface.Execute();
+                scheduledInterface.LastRunDateTime = DateTime.Now;
             }
             catch (Exception ex)
             {
