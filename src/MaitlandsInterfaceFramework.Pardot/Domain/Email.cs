@@ -11,7 +11,12 @@ namespace MaitlandsInterfaceFramework.Pardot.Domain
 
         public string Name { get; set; }
         public string Subject { get; set; }
-        public string Message { get; set; }
+
+        [JsonProperty("message.html")]
+        public string MessageHtml { get; set; }
+
+        [JsonProperty("message.text")]
+        public string MessageText { get; set; }
 
         [JsonProperty("created_at")]
         public DateTime CreatedAt { get; set; }

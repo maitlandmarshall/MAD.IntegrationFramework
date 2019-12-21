@@ -43,6 +43,7 @@ namespace MaitlandsInterfaceFramework.Database.Internals
                     String.Join("," + Environment.NewLine,
                         entityType
                         .GetProperties()
+                        .OrderByDescending(y => y.Name.ToLower().EndsWith("id"))
                         .Select(y => IPropertyToSqlColumnString(y))
                     )
                 );

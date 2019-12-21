@@ -1,10 +1,12 @@
-﻿using Newtonsoft.Json;
+﻿using MaitlandsInterfaceFramework.Core.Converters;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
 namespace MaitlandsInterfaceFramework.Pardot.Domain
 {
+    [JsonClass("visit", IsEnumerablePath = true)]
     public class Visit
     {
         public int Id { get; set; }
@@ -13,7 +15,7 @@ namespace MaitlandsInterfaceFramework.Pardot.Domain
         public int VisitorId { get; set; }
 
         [JsonProperty("prospect_id")]
-        public int ProspectId { get; set; }
+        public int? ProspectId { get; set; }
 
         [JsonProperty("visitor_page_view_count")]
         public int VisitorPageViewCount { get; set; }

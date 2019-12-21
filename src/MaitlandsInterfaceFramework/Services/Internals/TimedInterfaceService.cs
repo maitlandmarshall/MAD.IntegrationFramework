@@ -127,7 +127,9 @@ namespace MaitlandsInterfaceFramework.Services.Internals
                 }
 
                 await timedInterface.Execute();
-                scheduledInterface.LastRunDateTime = DateTime.Now;
+
+                if (scheduledInterface != null)
+                    scheduledInterface.LastRunDateTime = DateTime.Now;
             }
             catch (Exception ex)
             {

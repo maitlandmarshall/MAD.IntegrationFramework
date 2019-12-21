@@ -5,13 +5,18 @@ using System;
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
+using System.Threading.Tasks;
 
 namespace MaitlandsInterfaceFramework.Database
 {
+  
+
     public abstract class MIFDbContext : DbContext
     {
         private static List<Type> MigratedContexts = new List<Type>();
+        private static volatile object SyncToken = new object();
 
         public DbConnection Connection
         {
@@ -25,19 +30,22 @@ namespace MaitlandsInterfaceFramework.Database
             this.Database.SetCommandTimeout(TimeSpan.FromMinutes(10));
             this.Database.EnsureCreated();
 
-            if (!MigratedContexts.Contains(this.GetType()))
+            lock (SyncToken)
             {
-                try
+                if (!MigratedContexts.Contains(this.GetType()))
                 {
-                    AutomaticMigration.EnsureDatabaseUpToDate(this);
-                }
-                catch (Exception ex)
-                {
-                    _ = ex.LogException();
-                }
-                finally
-                {
-                    MigratedContexts.Add(this.GetType());
+                    try
+                    {
+                        AutomaticMigration.EnsureDatabaseUpToDate(this);
+                    }
+                    catch (Exception ex)
+                    {
+                        _ = ex.LogException();
+                    }
+                    finally
+                    {
+                        MigratedContexts.Add(this.GetType());
+                    }
                 }
             }
         }

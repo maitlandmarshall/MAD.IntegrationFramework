@@ -59,6 +59,15 @@ namespace MaitlandsInterfaceFramework.Core.Converters
 
             if (finalResult is IList finalList)
             {
+                Type underlyingEnumerableType = objectType
+                    .GetInterfaces()
+                    .FirstOrDefault(y => typeof(IEnumerable<object>).IsAssignableFrom(y))
+                    .GetGenericArguments()
+                    .FirstOrDefault();
+
+                if (jsonClassAttribute == null)
+                    jsonClassAttribute = underlyingEnumerableType.GetCustomAttribute<JsonClassAttribute>();
+
                 string jsonClassAttributePath;
 
                 if (String.IsNullOrEmpty(trailingJsonPropertyPath))
@@ -76,24 +85,39 @@ namespace MaitlandsInterfaceFramework.Core.Converters
                 // And group them by the array index
                 var groupedFlattenJsonByArrayIndex = flattenedJson
                     .Where(y => y.Key.StartsWith(jsonClassAttributePath))
-                    .GroupBy(y => {
-                        string index = y.Key.Substring(y.Key.IndexOf("[") + 1);
+                    .GroupBy(y =>
+                    {
+                        int indexOfArray = y.Key.IndexOf("[");
+
+                        if (indexOfArray == -1)
+                            return "";
+
+                        string pathToArray = y.Key.Substring(0, indexOfArray);
+
+                        if (!pathToArray.EndsWith(jsonClassAttributePath))
+                            return "";
+
+                        string index = y.Key.Substring(indexOfArray + 1);
                         index = index.Substring(0, index.IndexOf("]"));
 
                         return index;
-                     });
-
-                Type underlyingEnumerableType = objectType
-                    .GetInterfaces()
-                    .FirstOrDefault(y => typeof(IEnumerable<object>).IsAssignableFrom(y))
-                    .GetGenericArguments()
-                    .FirstOrDefault();
+                    });
 
                 foreach (var group in groupedFlattenJsonByArrayIndex)
                 {
                     Dictionary<string, object> arrayItemDictionary = group.ToDictionary(pair => pair.Key, pair => pair.Value);
 
-                    finalList.Add(this.ReadFlattenedJsonIntoTargetObjectType(arrayItemDictionary, underlyingEnumerableType, $"{jsonClassAttributePath}[{group.Key}]"));
+                    object targetObjectResult;
+                    if (String.IsNullOrEmpty(group.Key))
+                    {
+                        targetObjectResult = this.ReadFlattenedJsonIntoTargetObjectType(arrayItemDictionary, underlyingEnumerableType, $"{jsonClassAttributePath}");
+                    }
+                    else
+                    {
+                        targetObjectResult = this.ReadFlattenedJsonIntoTargetObjectType(arrayItemDictionary, underlyingEnumerableType, $"{jsonClassAttributePath}[{group.Key}]");
+                    }
+
+                    finalList.Add(targetObjectResult);
                 }
             }
             else
@@ -113,7 +137,7 @@ namespace MaitlandsInterfaceFramework.Core.Converters
                         flatJsonLookupKey = propToDeserialize.Name.Pascalize();
                     }
 
-                    if (jsonClassAttribute != null)
+                    if (jsonClassAttribute?.IsEnumerablePath == false)
                         flatJsonLookupKey = $"{this.PascalizePath(jsonClassAttribute.Path)}.{flatJsonLookupKey}";
 
                     if (!String.IsNullOrEmpty(trailingJsonPropertyPath))

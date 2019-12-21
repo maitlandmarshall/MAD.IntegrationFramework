@@ -13,7 +13,7 @@ namespace MaitlandsInterfaceFramework.Pardot.Domain
         public int ProspectId { get; set; }
 
         [JsonProperty("visitor_id")]
-        public int VisitorId { get; set; }
+        public int? VisitorId { get; set; }
 
         public int Type { get; set; }
 
@@ -55,7 +55,8 @@ namespace MaitlandsInterfaceFramework.Pardot.Domain
         [JsonProperty("file_id")]
         public int? FileId { get; set; }
 
-        public Campaign Campaign { get; set; }
+        [JsonProperty("campaign_id")]
+        public int? CampaignId { get; set; }
 
         [JsonProperty("created_at")]
         public DateTime CreatedAt { get; set; }

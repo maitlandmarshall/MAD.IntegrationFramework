@@ -1,9 +1,11 @@
 ﻿using MaitlandsInterfaceFramework.Core.Configuration;
+using MaitlandsInterfaceFramework.Core.Converters;
 using MaitlandsInterfaceFramework.Pardot.Api;
 using MaitlandsInterfaceFramework.Pardot.Domain;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -18,6 +20,7 @@ namespace MaitlandsInterfaceFramework.Pardot
     public class PardotApiClient
     {
         private const string PardotApiBaseUri = "https://pi.pardot.com/api/";
+        private static BlockingCollection<object> ConcurrentRequests = new BlockingCollection<object>(5);
 
         public string ApiKey { get; set; }
 
@@ -49,43 +52,69 @@ namespace MaitlandsInterfaceFramework.Pardot
             Uri requestUri = new Uri(new Uri(PardotApiBaseUri), relativeUri);
 
             HttpWebRequest request = HttpWebRequest.CreateHttp(requestUri.ToString());
-            
+            Guid requestGuid = Guid.NewGuid();
+
             if (!String.IsNullOrEmpty(this.ApiKey))
                 request.Headers.Add(HttpRequestHeader.Authorization, $"Pardot api_key={this.ApiKey}, user_key={config.PardotUserKey}");
 
-            HttpWebResponse response = request.GetResponse() as HttpWebResponse;
-
-            using Stream responseStream = response.GetResponseStream();
-            using StreamReader sr = new StreamReader(responseStream);
-
-            string responseContent = await sr.ReadToEndAsync();
-
-            if (typeof(ResponseType) == typeof(LoginResponse))
+            try
             {
-                return JsonConvert.DeserializeObject<ResponseType>(responseContent);
-            }
-            else
-            {
-                JObject result = JsonConvert.DeserializeObject<JObject>(responseContent);
+                ConcurrentRequests.Add(new object());
 
-                if (args.Any(y => y.argName == "output" && (y.argValue as string) == "bulk"))
+                HttpWebResponse response = request.GetResponse() as HttpWebResponse;
+                using Stream responseStream = response.GetResponseStream();
+                using StreamReader sr = new StreamReader(responseStream);
+
+                string responseContent = await sr.ReadToEndAsync();
+
+                try
                 {
-                    if (jsonConverter != null)
+                    if (typeof(ResponseType) == typeof(LoginResponse))
                     {
-                        JsonSerializer serializer = JsonSerializer.CreateDefault();
-                        serializer.Converters.Add(jsonConverter);
-
-                        return new JArray(result.Last.First.Last.First.ToList()).ToObject<ResponseType>(serializer);
+                        return JsonConvert.DeserializeObject<ResponseType>(responseContent);
                     }
                     else
                     {
-                        return result.Last.First.Last.First.ToObject<ResponseType>();
+                        JObject result = JsonConvert.DeserializeObject<JObject>(responseContent);
+
+                        if (args.Any(y => y.argName == "output" && (y.argValue as string) == "bulk"))
+                        {
+                            if (jsonConverter != null)
+                            {
+                                JsonSerializer serializer = JsonSerializer.CreateDefault();
+                                serializer.Converters.Add(jsonConverter);
+
+                                return new JArray(result.Last.First.Last.First.ToList()).ToObject<ResponseType>(serializer);
+                            }
+                            else
+                            {
+                                return result.Last.First.Last.First.ToObject<ResponseType>();
+                            }
+                        }
+                        else
+                        {
+                            if (jsonConverter != null)
+                            {
+                                JsonSerializer serializer = JsonSerializer.CreateDefault();
+                                serializer.Converters.Add(jsonConverter);
+
+                                return JObject.FromObject(result.Last.First).ToObject<ResponseType>(serializer);
+                            }
+                            else
+                            {
+                                return result.Last.First.ToObject<ResponseType>();
+                            }
+                        }
                     }
                 }
-                else
+                catch (Exception ex)
                 {
-                    return result.Last.First.ToObject<ResponseType>();
+                    throw new Exception(responseContent, ex);
                 }
+            }
+            finally
+            {
+                ConcurrentRequests.Take();
             }
         }
 
@@ -111,7 +140,12 @@ namespace MaitlandsInterfaceFramework.Pardot
 
         public async Task<Email> GetEmail(int emailId)
         {
-            return await this.ExecuteWebRequest<Email>($"email/version/4/do/read/id/{emailId}");
+            return await this.ExecuteWebRequest<Email>($"email/version/4/do/read/id/{emailId}", new NestedJsonConverter());
+        }
+
+        public async Task<IEnumerable<Visit>> GetVisits(params int[] visitorIds)
+        {
+            return await this.ExecuteWebRequest<List<Visit>>("visit/version/4/do/query", new NestedJsonConverter(), ("visitor_ids", String.Join(",", visitorIds)));
         }
 
         public Task<IEnumerable<TargetType>> PerformBulkQuery<TargetType>(BulkQueryParameters parameters = null, JsonConverter jsonConverter = null)

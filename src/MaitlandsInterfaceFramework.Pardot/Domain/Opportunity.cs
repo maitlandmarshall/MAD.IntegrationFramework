@@ -21,7 +21,7 @@ namespace MaitlandsInterfaceFramework.Pardot.Domain
         public string Status { get; set; }
 
         [JsonProperty("closed_at")]
-        public DateTime ClosedAt { get; set; }
+        public DateTime? ClosedAt { get; set; }
 
         [JsonProperty("created_at")]
         public DateTime CreatedAt { get; set; }

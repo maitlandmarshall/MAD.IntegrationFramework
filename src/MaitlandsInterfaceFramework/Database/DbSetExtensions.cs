@@ -10,7 +10,7 @@ namespace MaitlandsInterfaceFramework.Database
 {
     public static class DbSetExtensions
     {
-        public async static Task<T> FirstOrDefaultAsyncLocalThenRemote<T> (this DbSet<T> dbSet, Expression<Func<T, bool>> predicate) where T : class
+        public async static Task<T> FirstOrDefaultAsyncLocalThenRemote<T>(this DbSet<T> dbSet, Expression<Func<T, bool>> predicate) where T : class
         {
             return dbSet.Local.FirstOrDefault(predicate.Compile()) ?? await dbSet.FirstOrDefaultAsync(predicate);
         }

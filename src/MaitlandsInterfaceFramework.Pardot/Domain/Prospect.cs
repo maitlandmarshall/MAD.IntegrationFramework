@@ -82,7 +82,7 @@ namespace MaitlandsInterfaceFramework.Pardot.Domain
         public string CrmAccountFid { get; set; }
 
         [JsonProperty("crm_last_sync")]
-        public DateTime CrmLastSync { get; set; }
+        public DateTime? CrmLastSync { get; set; }
 
         [JsonProperty("crm_url")]
         public string CrmUrl { get; set; }

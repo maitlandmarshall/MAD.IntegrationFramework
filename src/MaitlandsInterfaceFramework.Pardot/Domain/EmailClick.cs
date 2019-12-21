@@ -18,7 +18,7 @@ namespace MaitlandsInterfaceFramework.Pardot.Domain
         public int ListEmailId { get; set; }
 
         [JsonProperty("email_template_id")]
-        public int EmailTemplateId { get; set; }
+        public int? EmailTemplateId { get; set; }
 
         [JsonProperty("created_at")]
         public DateTime CreatedAt { get; set; }
