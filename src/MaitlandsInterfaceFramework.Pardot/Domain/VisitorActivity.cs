@@ -5,7 +5,7 @@ using System.Text;
 
 namespace MaitlandsInterfaceFramework.Pardot.Domain
 {
-    public class VisitorActivity
+    public class VisitorActivity : IImmutableEntity
     {
         public int Id { get; set; }
 

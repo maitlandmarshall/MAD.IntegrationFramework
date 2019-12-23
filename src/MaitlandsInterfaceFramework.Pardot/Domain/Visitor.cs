@@ -1,16 +1,18 @@
 ﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 using System;
 using System.Collections.Generic;
+using System.Runtime.Serialization;
 using System.Text;
 
 namespace MaitlandsInterfaceFramework.Pardot.Domain
 {
-    public class Visitor
+    public class Visitor : IMutableEntity
     {
         public int Id { get; set; }
 
         [JsonProperty("page_view_count")]
-        public int PageViewCount { get; set; }
+        public int? PageViewCount { get; set; }
 
         [JsonProperty("ip_address")]
         public string IpAddress { get; set; }
@@ -37,5 +39,16 @@ namespace MaitlandsInterfaceFramework.Pardot.Domain
 
         [JsonProperty("updated_at")]
         public DateTime UpdatedAt { get; set; }
+
+        [OnError]
+        internal void OnError(StreamingContext context, ErrorContext errorContext)
+        {
+            if (errorContext.Member is string memberString)
+            {
+                if (memberString == "hostname")
+                    errorContext.Handled = true;
+            }
+        }
+
     }
 }

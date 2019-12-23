@@ -5,7 +5,7 @@ using System.Text;
 
 namespace MaitlandsInterfaceFramework.Pardot.Domain
 {
-    public class EmailClick
+    public class EmailClick : IImmutableEntity
     {
         public int Id { get; set; }
 
@@ -15,7 +15,7 @@ namespace MaitlandsInterfaceFramework.Pardot.Domain
         public string Url { get; set; }
 
         [JsonProperty("list_email_id")]
-        public int ListEmailId { get; set; }
+        public int? ListEmailId { get; set; }
 
         [JsonProperty("email_template_id")]
         public int? EmailTemplateId { get; set; }

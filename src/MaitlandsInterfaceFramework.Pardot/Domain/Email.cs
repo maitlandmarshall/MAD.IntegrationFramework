@@ -4,8 +4,8 @@ using System.Collections.Generic;
 using System.Text;
 
 namespace MaitlandsInterfaceFramework.Pardot.Domain
-{
-    public class Email
+{ 
+    public class Email : IImmutableEntity
     {
         public int Id { get; set; }
 

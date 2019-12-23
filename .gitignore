@@ -339,3 +339,4 @@ ASALocalRun/
 # BeatPulse healthcheck temp database
 healthchecksdb
 /src/MaitlandsInterfaceFramework.Pardot.Tests/PardotApiKeys.txt
+/src/MaitlandsInterfaceFramework.Namely.Tests/NamelyApiKeys.txt

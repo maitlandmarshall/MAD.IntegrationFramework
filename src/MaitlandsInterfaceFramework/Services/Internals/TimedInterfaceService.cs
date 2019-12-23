@@ -72,6 +72,14 @@ namespace MaitlandsInterfaceFramework.Services.Internals
             try
             {
                 await this.ExecuteInterface(serviceTimer.TimedInterface);
+
+                if (serviceTimer.Interval != serviceTimer.TimedInterface.Interval.TotalMilliseconds)
+                    serviceTimer.Interval = serviceTimer.TimedInterface.Interval.TotalMilliseconds;
+            }
+            catch (Exception ex)
+            {
+                await ex.LogException();
+                serviceTimer.Interval = TimeSpan.FromHours(6).TotalMilliseconds;
             }
             finally
             {
@@ -130,10 +138,6 @@ namespace MaitlandsInterfaceFramework.Services.Internals
 
                 if (scheduledInterface != null)
                     scheduledInterface.LastRunDateTime = DateTime.Now;
-            }
-            catch (Exception ex)
-            {
-                await ex.LogException();
             }
             finally
             {

@@ -4,7 +4,7 @@ using System.Text;
 
 namespace MaitlandsInterfaceFramework.Pardot.Domain
 {
-    public class Campaign
+    public class Campaign : IEntity
     {
         public int Id { get; set; }
         public string Name { get; set; }

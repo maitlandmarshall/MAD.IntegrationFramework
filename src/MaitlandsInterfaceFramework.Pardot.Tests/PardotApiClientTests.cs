@@ -2,6 +2,7 @@
 using MaitlandsInterfaceFramework.Pardot.Domain;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -57,6 +58,9 @@ namespace MaitlandsInterfaceFramework.Pardot.Tests
 
             Assert.IsNotNull(account);
         }
+
+
+        #region BULK QUERY TESTS WITHOUT DATE PARAMS
 
         [TestMethod]
         public async Task GetCampaignsTest()
@@ -122,19 +126,120 @@ namespace MaitlandsInterfaceFramework.Pardot.Tests
             Assert.IsNotNull(visitors);
         }
 
-        [TestMethod]
-        public async Task GetVisitsTest()
-        {
-            var visits = await this.BulkQueryTest<Visit>();
+        #endregion
 
-            Assert.IsNotNull(visits);
+        #region BULK QUERY TESTS WITH DATE PARAMS
+
+        [TestMethod]
+        public async Task GetCampaignsWithDateTest()
+        {
+            var campaigns = await this.BulkQueryTest<Campaign>(true);
+
+            Assert.IsNotNull(campaigns);
         }
 
+        [TestMethod]
+        public async Task GetCustomRedirectsWithDateTest()
+        {
+            var customRedirects = await this.BulkQueryTest<CustomRedirect>(true);
 
-        private async Task<IEnumerable<ResponseType>> BulkQueryTest<ResponseType>()
+            Assert.IsNotNull(customRedirects);
+        }
+
+        [TestMethod]
+        public async Task GetEmailClickWithDateTest()
+        {
+            var emailClicks = await this.BulkQueryTest<EmailClick>(true);
+
+            Assert.IsNotNull(emailClicks);
+        }
+
+        [TestMethod]
+        public async Task GetOpportunitiesWithDateTest()
+        {
+            var opportunitites = await this.BulkQueryTest<Opportunity>(true);
+
+            Assert.IsNotNull(opportunitites);
+        }
+
+        [TestMethod]
+        public async Task GetProspectsWithDateTest()
+        {
+            var prospects = await this.BulkQueryTest<Prospect>(true);
+
+            Assert.IsNotNull(prospects);
+        }
+
+        [TestMethod]
+        public async Task GetProspectAccountsWithDateTest()
+        {
+            var prospectAccounts = await this.BulkQueryTest<ProspectAccount>(true);
+
+            Assert.IsNotNull(prospectAccounts);
+        }
+
+        [TestMethod]
+        public async Task GetUsersWithDateTest()
+        {
+            var users = await this.BulkQueryTest<User>(true);
+
+            Assert.IsNotNull(users);
+        }
+
+        [TestMethod]
+        public async Task GetVisitorsWithDateTest()
+        {
+            var visitors = await this.BulkQueryTest<Visitor>(true);
+
+            Assert.IsNotNull(visitors);
+        }
+
+        [TestMethod]
+        public void TestFailResponse()
+        {
+            string failResponseJson = "{\"@attributes\":{\"stat\":\"fail\",\"version\":1,\"err_code\":1},\"err\":\"Invalid API key or user key\"}";
+            string successResponseJson = "{\"@attributes\":{\"stat\":\"ok\",\"version\":1}}";
+
+            JObject failResponse = JsonConvert.DeserializeObject<JObject>(failResponseJson);
+            JObject successResponse = JsonConvert.DeserializeObject<JObject>(successResponseJson);
+
+            ParseResponse(failResponse);
+            ParseResponse(successResponse);
+        }
+
+        private void ParseResponse(JObject successOrFailResponse)
+        {
+            var errCode = successOrFailResponse["@attributes"]["err_code"];
+
+            if (errCode == null)
+                return;
+
+            int errorCode = errCode.Value<int>();
+
+            Assert.IsTrue(errorCode > 0);
+        }
+
+        #endregion
+
+
+        private async Task<IEnumerable<ResponseType>> BulkQueryTest<ResponseType>(bool isDateTest = false) where ResponseType : IEntity
         {
             var client = GetClient();
-            return await client.PerformBulkQuery<ResponseType>();
+
+            if (isDateTest)
+            {
+                return await client.PerformBulkQuery<ResponseType>(new Api.BulkQueryParameters
+                {
+                    CreatedAfter = DateTime.Now.AddDays(-5),
+                    UpdatedAfter = DateTime.Now.AddDays(-5)
+                });
+            }
+            else
+            {
+                return await client.PerformBulkQuery<ResponseType>();
+            }
+
+            
         }
     }
 }

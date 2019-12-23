@@ -5,9 +5,9 @@ using System.Text;
 
 namespace MaitlandsInterfaceFramework.Pardot.Domain
 {
-    public class Prospect
+    public class Prospect : IMutableEntity
     {
-        public int? Id { get; set; }
+        public int Id { get; set; }
 
         public Campaign Campaign { get; set; }
 

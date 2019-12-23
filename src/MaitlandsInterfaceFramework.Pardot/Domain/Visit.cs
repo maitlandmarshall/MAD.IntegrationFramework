@@ -7,7 +7,7 @@ using System.Text;
 namespace MaitlandsInterfaceFramework.Pardot.Domain
 {
     [JsonClass("visit", IsEnumerablePath = true)]
-    public class Visit
+    public class Visit : IMutableEntity
     {
         public int Id { get; set; }
 

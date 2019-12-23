@@ -5,7 +5,7 @@ using System.Text;
 
 namespace MaitlandsInterfaceFramework.Pardot.Domain
 {
-    public class User
+    public class User : IMutableEntity
     {
         public int Id { get; set; }
         public string Email { get; set; }

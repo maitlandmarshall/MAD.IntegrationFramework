@@ -5,7 +5,7 @@ using System.Text;
 
 namespace MaitlandsInterfaceFramework.Pardot.Domain
 {
-    public class CustomRedirect
+    public class CustomRedirect : IMutableEntity
     {
         public int Id { get; set; }
         public string Name { get; set; }
