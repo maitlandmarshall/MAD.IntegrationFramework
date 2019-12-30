@@ -19,6 +19,8 @@ namespace MaitlandsInterfaceFramework.Pardot
 {
     public class PardotApiClient
     {
+        private const int MaxQueryResults = 200;
+
         private const string PardotApiBaseUri = "https://pi.pardot.com/api/";
         private static BlockingCollection<object> ConcurrentRequests = new BlockingCollection<object>(5);
 
@@ -32,7 +34,7 @@ namespace MaitlandsInterfaceFramework.Pardot
                 throw new Exception($"{nameof(MIFConfig)} must implement {nameof(IPardotConfig)}.");
         }
 
-        internal async Task<ResponseType> ExecuteWebRequest<ResponseType>(string relativeUri, JsonConverter jsonConverter = null, params (string argName, object argValue)[] args)
+        internal async Task<ResponseType> ExecuteWebRequest<ResponseType>(string relativeUri, params (string argName, object argValue)[] args)
         {
             string apiFinalUri = relativeUri;
 
@@ -93,67 +95,26 @@ namespace MaitlandsInterfaceFramework.Pardot
 
                 try
                 {
-                    if (typeof(ResponseType) == typeof(LoginResponse))
-                    {
-                        return JsonConvert.DeserializeObject<ResponseType>(responseContent);
-                    }
-                    else
-                    {
-                        JObject result = JsonConvert.DeserializeObject<JObject>(responseContent);
-                        JToken errCode = result["@attributes"]["err_code"];
+                    ResponseType result = JsonConvert.DeserializeObject<ResponseType>(responseContent);
 
-                        if (errCode != null)
+                    if (result is QueryResponse queryResponse)
+                    {
+                        if (queryResponse.Attributes.ErrorCode.HasValue)
                         {
-                            int errorId = errCode.Value<int>();
-
-                            // If the ApiKey has expired
-                            if (errorId == 1)
+                            if (queryResponse.Attributes.ErrorCode == 1)
                             {
-                                // Reset the API key so the next request retrieves it automatically
-
                                 this.ApiKey = null;
-                                return await this.ExecuteWebRequest<ResponseType>(relativeUri, jsonConverter, args);
+
+                                return await this.ExecuteWebRequest<ResponseType>(relativeUri, args);
                             }
                             else
                             {
-                                throw new Exception(responseContent);
-                            }
-                        }
-
-                        if (args.Any(y => y.argName == "output" && (y.argValue as string) == "bulk"))
-                        {
-                            JToken resultItems = result["result"];
-
-                            if (resultItems.Type == JTokenType.Null)
-                                return default(ResponseType);
-
-                            if (jsonConverter != null)
-                            {
-                                JsonSerializer serializer = JsonSerializer.CreateDefault();
-                                serializer.Converters.Add(jsonConverter);
-
-                                return new JArray(result.Last.First.Last.First.ToList()).ToObject<ResponseType>(serializer);
-                            }
-                            else
-                            {
-                                return result.Last.First.Last.First.ToObject<ResponseType>();
-                            }
-                        }
-                        else
-                        {
-                            if (jsonConverter != null)
-                            {
-                                JsonSerializer serializer = JsonSerializer.CreateDefault();
-                                serializer.Converters.Add(jsonConverter);
-
-                                return JObject.FromObject(result.Last.First).ToObject<ResponseType>(serializer);
-                            }
-                            else
-                            {
-                                return result.Last.First.ToObject<ResponseType>();
+                                throw new Exception(queryResponse.Error);
                             }
                         }
                     }
+
+                    return result;
                 }
                 catch (Exception ex)
                 {
@@ -172,8 +133,9 @@ namespace MaitlandsInterfaceFramework.Pardot
 
             LoginResponse response = await this.ExecuteWebRequest<LoginResponse>(
                 relativeUri: $"login/version/4",
-                null,
-                ("email", config.PardotEmail), ("password", config.PardotPassword), ("user_key", config.PardotUserKey)
+                ("email", config.PardotEmail), 
+                ("password", config.PardotPassword), 
+                ("user_key", config.PardotUserKey)
             );
 
             this.ApiKey = response.ApiKey;
@@ -191,21 +153,32 @@ namespace MaitlandsInterfaceFramework.Pardot
             if (emailId == 0)
                 throw new Exception($"{nameof(emailId)} must be greater than 0");
 
-            return await this.ExecuteWebRequest<Email>($"email/version/4/do/read/id/{emailId}", new NestedJsonConverter());
+            return await this.ExecuteWebRequest<Email>($"email/version/4/do/read/id/{emailId}");
         }
 
         public async Task<IEnumerable<Visit>> GetVisits(params int[] visitorIds)
         {
-            return await this.ExecuteWebRequest<List<Visit>>("visit/version/4/do/query", new NestedJsonConverter(), ("visitor_ids", String.Join(",", visitorIds)));
+            List<Visit> totalVisits = new List<Visit>();
+            QueryResponse<Visit> paginatedResponse;
+
+            do
+            {
+                paginatedResponse = await this.ExecuteWebRequest<QueryResponse<Visit>>("visit/version/4/do/query", 
+                    ("visitor_ids", String.Join(",", visitorIds)),
+                    ("offset", totalVisits.Count));
+
+                totalVisits.AddRange(paginatedResponse.Result.Items);
+
+            } while (paginatedResponse.Result.Items.Count > 0 && (!paginatedResponse.Result.TotalResults.HasValue || totalVisits.Count != paginatedResponse.Result.TotalResults.Value));
+
+            return totalVisits;
         }
 
         public Task<IEnumerable<TargetType>> PerformBulkQuery<TargetType>(BulkQueryParameters parameters = null, JsonConverter jsonConverter = null) where TargetType : IEntity
-            => PerformBulkQuery<TargetType>(typeof(TargetType).Name, parameters, jsonConverter);
+            => PerformBulkQuery<TargetType>(typeof(TargetType).Name, parameters);
             
-        public async Task<IEnumerable<TargetType>> PerformBulkQuery<TargetType>(string pardotApiEndpointName, BulkQueryParameters parameters = null, JsonConverter jsonConverter = null) where TargetType : IEntity
+        public async Task<IEnumerable<TargetType>> PerformBulkQuery<TargetType>(string pardotApiEndpointName, BulkQueryParameters parameters = null) where TargetType : IEntity
         {
-            const int maxBulkQueryReturnResult = 200;
-
             List<TargetType> totalResult = new List<TargetType>();
             int lastPaginatedResultCount = 0;
 
@@ -215,28 +188,30 @@ namespace MaitlandsInterfaceFramework.Pardot
             DateTime? updatedAfter = parameters?.UpdatedAfter;
             int? idGreaterThan = parameters?.IdGreaterThan;
             int? idLessThan = parameters?.IdLessThan;
+            int? take = parameters?.Take;
 
             bool isImmutableEntity = typeof(IImmutableEntity).IsAssignableFrom(typeof(TargetType));
             bool isMutableEntity = typeof(IMutableEntity).IsAssignableFrom(typeof(TargetType));
 
             do
             {
-                List<TargetType> paginatedResult = await this.ExecuteWebRequest<List<TargetType>>($"{pardotApiEndpointName}/version/4/do/query", jsonConverter,
-                    ("output", "bulk"),
+                QueryResponse<TargetType> queryResponse = await this.ExecuteWebRequest<QueryResponse<TargetType>>($"{pardotApiEndpointName}/version/4/do/query",
+                    //("output", "bulk"),
                     ("created_before", createdBefore),
                     ("created_after", createdAfter),
                     ("updated_before", updatedBefore),
                     ("updated_after", updatedAfter),
                     ("id_greater_than", idGreaterThan),
-                    ("id_less_than", idLessThan)) 
-                ?? new List<TargetType>();
+                    ("id_less_than", idLessThan));
 
-                lastPaginatedResultCount = paginatedResult.Count;
+                List<TargetType> items = queryResponse.Result.Items;
 
-                if (paginatedResult.Count == 0)
+                lastPaginatedResultCount = items.Count;
+
+                if (lastPaginatedResultCount == 0)
                     break;
 
-                totalResult.AddRange(paginatedResult);
+                totalResult.AddRange(items);
 
                 if (!createdBefore.HasValue
                     && !createdAfter.HasValue
@@ -245,38 +220,38 @@ namespace MaitlandsInterfaceFramework.Pardot
                     && !idGreaterThan.HasValue
                     && !idLessThan.HasValue)
                 {
-                    idGreaterThan = paginatedResult.Max(y => y.Id);
+                    idGreaterThan = items.Max(y => y.Id);
                 }
                 else
                 {
                     if (createdBefore.HasValue && isImmutableEntity)
                     {
-                        createdBefore = paginatedResult.Cast<IImmutableEntity>().Min(y => y.CreatedAt);
+                        createdBefore = items.Cast<IImmutableEntity>().Min(y => y.CreatedAt);
                     }
 
                     if (updatedBefore.HasValue && isMutableEntity)
                     {
-                        updatedBefore = paginatedResult.Cast<IMutableEntity>().Min(y => y.UpdatedAt);
+                        updatedBefore = items.Cast<IMutableEntity>().Min(y => y.UpdatedAt);
                     }
 
                     if (createdAfter.HasValue && isImmutableEntity)
                     {
-                        createdAfter = paginatedResult.Cast<IImmutableEntity>().Max(y => y.CreatedAt);
+                        createdAfter = items.Cast<IImmutableEntity>().Max(y => y.CreatedAt);
                     }
 
                     if (updatedAfter.HasValue && isMutableEntity)
                     {
-                        updatedAfter = paginatedResult.Cast<IMutableEntity>().Max(y => y.CreatedAt);
+                        updatedAfter = items.Cast<IMutableEntity>().Max(y => y.CreatedAt);
                     }
 
                     if (idGreaterThan.HasValue)
-                        idGreaterThan = paginatedResult.Max(y => y.Id);
+                        idGreaterThan = items.Max(y => y.Id);
 
                     if (idLessThan.HasValue)
-                        idLessThan = paginatedResult.Min(y => y.Id);
+                        idLessThan = items.Min(y => y.Id);
                 }
 
-            } while (lastPaginatedResultCount == maxBulkQueryReturnResult);
+            } while (lastPaginatedResultCount == MaxQueryResults && (!take.HasValue || totalResult.Count < take.Value));
 
             return totalResult;
         }

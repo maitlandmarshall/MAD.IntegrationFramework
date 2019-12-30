@@ -1,10 +1,13 @@
-﻿using Newtonsoft.Json;
+﻿using MaitlandsInterfaceFramework.Core.Converters;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
 namespace MaitlandsInterfaceFramework.Pardot.Domain
 { 
+    [JsonClass("email")]
+    [JsonConverter(typeof(NestedJsonConverter))]
     public class Email : IImmutableEntity
     {
         public int Id { get; set; }

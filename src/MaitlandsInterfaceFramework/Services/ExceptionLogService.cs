@@ -16,6 +16,8 @@ namespace MaitlandsInterfaceFramework.Services
         public string Message { get; set; }
         public string Detail { get; set; }
 
+        public string Interface { get; set; }
+
         public DateTime DateTime { get; set; }
     }
 
@@ -26,7 +28,7 @@ namespace MaitlandsInterfaceFramework.Services
 
     public static class ExceptionLogService
     {
-        public static async Task LogException(this Exception exception)
+        public static async Task LogException(this Exception exception, string interfaceName = null)
         {
             LogService.WriteToLog(exception.ToString());
 
@@ -39,7 +41,8 @@ namespace MaitlandsInterfaceFramework.Services
                 {
                     Message = exception.Message,
                     Detail = exception.ToString(),
-                    DateTime = DateTime.Now
+                    DateTime = DateTime.Now,
+                    Interface = interfaceName
                 };
 
                 db.ExceptionLogs.Add(log);

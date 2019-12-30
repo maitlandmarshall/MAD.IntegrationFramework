@@ -78,7 +78,7 @@ namespace MaitlandsInterfaceFramework.Services.Internals
             }
             catch (Exception ex)
             {
-                await ex.LogException();
+                await ex.LogException(serviceTimer.TimedInterface.GetType().Name);
                 serviceTimer.Interval = TimeSpan.FromHours(6).TotalMilliseconds;
             }
             finally

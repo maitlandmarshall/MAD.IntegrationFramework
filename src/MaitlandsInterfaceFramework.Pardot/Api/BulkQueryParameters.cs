@@ -12,5 +12,7 @@ namespace MaitlandsInterfaceFramework.Pardot.Api
         public DateTime? UpdatedAfter { get; set; }
         public int? IdGreaterThan { get; set; }
         public int? IdLessThan { get; set; }
+
+        public int? Take { get; set; }
     }
 }

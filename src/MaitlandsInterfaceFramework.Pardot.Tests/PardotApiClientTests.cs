@@ -6,6 +6,7 @@ using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -230,13 +231,16 @@ namespace MaitlandsInterfaceFramework.Pardot.Tests
             {
                 return await client.PerformBulkQuery<ResponseType>(new Api.BulkQueryParameters
                 {
-                    CreatedAfter = DateTime.Now.AddDays(-5),
-                    UpdatedAfter = DateTime.Now.AddDays(-5)
+                    CreatedAfter = DateTime.Now.AddDays(-1),
+                    UpdatedAfter = DateTime.Now.AddDays(-1)
                 });
             }
             else
             {
-                return await client.PerformBulkQuery<ResponseType>();
+                var result = await client.PerformBulkQuery<ResponseType>(new Api.BulkQueryParameters { Take = 600 });
+                Assert.IsTrue(result.Count() <= 600);
+
+                return result;
             }
 
             

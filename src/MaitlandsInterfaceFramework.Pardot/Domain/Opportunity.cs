@@ -29,6 +29,7 @@ namespace MaitlandsInterfaceFramework.Pardot.Domain
         [JsonProperty("updated_at")]
         public DateTime UpdatedAt { get; set; }
 
-        public JObject Prospects { get; set; }
+        [JsonProperty("prospects{},[]")]
+        public List<Prospect> Prospects { get; set; }
     }
 }
