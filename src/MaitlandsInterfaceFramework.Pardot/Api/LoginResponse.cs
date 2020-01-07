@@ -5,7 +5,7 @@ using System.Text;
 
 namespace MaitlandsInterfaceFramework.Pardot.Api
 {
-    public class LoginResponse
+    public class LoginResponse : ApiResponse
     {
         [JsonProperty("api_key")]
         public string ApiKey { get; set; }

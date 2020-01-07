@@ -11,8 +11,6 @@ using System.Threading.Tasks;
 
 namespace MaitlandsInterfaceFramework.Database
 {
-  
-
     public abstract class MIFDbContext : DbContext
     {
         private static List<Type> MigratedContexts = new List<Type>();

@@ -10,7 +10,7 @@ namespace MaitlandsInterfaceFramework.Pardot.Domain
         public int Id { get; set; }
 
         [JsonProperty("prospect_id")]
-        public int ProspectId { get; set; }
+        public int? ProspectId { get; set; }
 
         [JsonProperty("visitor_id")]
         public int? VisitorId { get; set; }

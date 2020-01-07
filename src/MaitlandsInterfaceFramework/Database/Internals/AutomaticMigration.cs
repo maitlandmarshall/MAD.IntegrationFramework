@@ -10,8 +10,12 @@ namespace MaitlandsInterfaceFramework.Database.Internals
 {
     internal static class AutomaticMigration
     {
+        /// <summary>
+        /// Creates any tables which are missing in the target SQL database
+        /// </summary>
         public static void EnsureDatabaseUpToDate(MIFDbContext dbContext)
         {
+            // Loop through each entity defined as a DbSet in the DbContext's Model
             foreach (IEntityType entityType in dbContext.Model.GetEntityTypes())
             {
                 string tableName = entityType.GetTableName();
@@ -19,6 +23,7 @@ namespace MaitlandsInterfaceFramework.Database.Internals
                 if (String.IsNullOrEmpty(tableName))
                     continue;
 
+                // Query the tableType from the database. It could potentially be a view.
                 string tableType = dbContext.Connection
                         .Query<string>(
                             sql: "SELECT TABLE_TYPE FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = @TableName",
@@ -28,6 +33,7 @@ namespace MaitlandsInterfaceFramework.Database.Internals
                             }
                         ).FirstOrDefault();
 
+                // If tableType comes back as null, the table doesn't exist and must be created.
                 bool tableExists = !String.IsNullOrEmpty(tableType);
 
                 if (tableExists)
@@ -35,6 +41,7 @@ namespace MaitlandsInterfaceFramework.Database.Internals
 
                 WriteToLog($"Creating {tableName} table");
 
+                // Begin building the CREATE TABLE statement
                 StringBuilder queryBuilder = new StringBuilder();
                 queryBuilder.AppendLine($"CREATE TABLE {tableName}");
                 queryBuilder.AppendLine("(");

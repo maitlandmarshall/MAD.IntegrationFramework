@@ -1,9 +1,7 @@
 ﻿using MaitlandsInterfaceFramework.Core.Configuration;
-using MaitlandsInterfaceFramework.Core.Converters;
 using MaitlandsInterfaceFramework.Pardot.Api;
 using MaitlandsInterfaceFramework.Pardot.Domain;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -11,7 +9,6 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Runtime.CompilerServices;
-using System.Text;
 using System.Threading.Tasks;
 
 [assembly: InternalsVisibleTo("MaitlandsInterfaceFramework.Pardot.Tests")]
@@ -20,34 +17,31 @@ namespace MaitlandsInterfaceFramework.Pardot
     public class PardotApiClient
     {
         private const int MaxQueryResults = 200;
+        private const string ApiBaseUri = "https://pi.pardot.com/api/";
 
-        private const string PardotApiBaseUri = "https://pi.pardot.com/api/";
         private static BlockingCollection<object> ConcurrentRequests = new BlockingCollection<object>(5);
 
         public string ApiKey { get; set; }
 
+        private IPardotConfig Config
+        {
+            get => MIFConfig.Instance as IPardotConfig;
+        }
+
         public PardotApiClient()
         {
-            IPardotConfig config = MIFConfig.Instance as IPardotConfig;
-
-            if (config == null)
+            if (this.Config == null)
                 throw new Exception($"{nameof(MIFConfig)} must implement {nameof(IPardotConfig)}.");
         }
 
-        internal async Task<ResponseType> ExecuteWebRequest<ResponseType>(string relativeUri, params (string argName, object argValue)[] args)
+        private string BuildUriFromArgs(string relativeUri, (string argName, object argValue)[] args)
         {
-            string apiFinalUri = relativeUri;
-
-            if (String.IsNullOrEmpty(this.ApiKey) && apiFinalUri.Contains("login") == false)
-                await this.LoginAndGetApiKey();
-
-            IPardotConfig config = MIFConfig.Instance as IPardotConfig;
-
             if (args.Length > 0)
             {
                 string[] argumentsFormatted = args
                     .Where(y => y.argValue != null)
-                    .Select(y => {
+                    .Select(y =>
+                    {
                         object argValue = y.argValue;
                         string argName = y.argName;
 
@@ -65,76 +59,112 @@ namespace MaitlandsInterfaceFramework.Pardot
                         }
 
                         return $"{argName}={argFinalValue}";
-                     }).ToArray();
+                    }).ToArray();
 
                 string argSegment = String.Join("&", argumentsFormatted);
-                apiFinalUri += $"?{argSegment}&format=json";
+                relativeUri += $"?{argSegment}&format=json";
             }
             else
             {
-                apiFinalUri += $"?format=json";
+                relativeUri += $"?format=json";
             }
 
-            Uri requestUri = new Uri(new Uri(PardotApiBaseUri), apiFinalUri);
+            return relativeUri;
+        }
 
+        internal HttpWebRequest CreateWebRequest(string requestUri)
+        {
             HttpWebRequest request = HttpWebRequest.CreateHttp(requestUri.ToString());
-            Guid requestGuid = Guid.NewGuid();
+            request.KeepAlive = true;
 
             if (!String.IsNullOrEmpty(this.ApiKey))
-                request.Headers.Add(HttpRequestHeader.Authorization, $"Pardot api_key={this.ApiKey}, user_key={config.PardotUserKey}");
+                request.Headers.Add(HttpRequestHeader.Authorization, $"Pardot api_key={this.ApiKey}, user_key={this.Config.PardotUserKey}");
+
+            return request;
+        }
+
+        internal async Task<string> GetWebRequestResponseAsString(HttpWebRequest request)
+        {
+            const int maxRequestAttempts = 3;
+            int requestAttempts = 1;
+
+            while (true)
+            {
+                try
+                {
+                    ConcurrentRequests.Add(new object());
+
+                    using (HttpWebResponse response = request.GetResponse() as HttpWebResponse)
+                    using (Stream responseStream = response.GetResponseStream())
+                    using (StreamReader sr = new StreamReader(responseStream))
+                    {
+                        string responseContent = await sr.ReadToEndAsync();
+                        return responseContent;
+                    }
+                }
+                catch (Exception)
+                {
+                    if (requestAttempts >= maxRequestAttempts)
+                        throw;
+
+                    await Task.Delay(5000);
+                    request = this.CreateWebRequest(request.RequestUri.AbsoluteUri);
+                }
+                finally
+                {
+                    requestAttempts++;
+                    ConcurrentRequests.Take();
+                }
+            }
+        }
+
+        internal async Task<ResponseType> ExecuteApiRequestForRelativeUri<ResponseType>(string relativeUri, params (string argName, object argValue)[] args)
+        {
+            string apiFinalUri = this.BuildUriFromArgs(relativeUri, args);
+
+            if (String.IsNullOrEmpty(this.ApiKey) && apiFinalUri.Contains("login") == false)
+                await this.LoginAndGetApiKey();
+
+            Uri requestUri = new Uri(new Uri(ApiBaseUri), apiFinalUri);
+
+            HttpWebRequest request = this.CreateWebRequest(requestUri.ToString());
+            string responseContent = await this.GetWebRequestResponseAsString(request);
 
             try
             {
-                ConcurrentRequests.Add(new object());
+                ResponseType result = JsonConvert.DeserializeObject<ResponseType>(responseContent);
 
-                HttpWebResponse response = request.GetResponse() as HttpWebResponse;
-                using Stream responseStream = response.GetResponseStream();
-                using StreamReader sr = new StreamReader(responseStream);
-
-                string responseContent = await sr.ReadToEndAsync();
-
-                try
+                if (result is ApiResponse queryResponse && queryResponse.Attributes.ErrorCode.HasValue)
                 {
-                    ResponseType result = JsonConvert.DeserializeObject<ResponseType>(responseContent);
-
-                    if (result is QueryResponse queryResponse)
+                    if (queryResponse.Attributes.ErrorCode == 1)
                     {
-                        if (queryResponse.Attributes.ErrorCode.HasValue)
-                        {
-                            if (queryResponse.Attributes.ErrorCode == 1)
-                            {
-                                this.ApiKey = null;
+                        this.ApiKey = null;
 
-                                return await this.ExecuteWebRequest<ResponseType>(relativeUri, args);
-                            }
-                            else
-                            {
-                                throw new Exception(queryResponse.Error);
-                            }
-                        }
+                        return await this.ExecuteApiRequestForRelativeUri<ResponseType>(relativeUri, args);
                     }
+                    else
+                    {
+                        throw new Exception(queryResponse.Error);
+                    }
+                }
 
-                    return result;
-                }
-                catch (Exception ex)
-                {
-                    throw new Exception(responseContent, ex);
-                }
+                return result;
             }
-            finally
+            catch (Exception ex)
             {
-                ConcurrentRequests.Take();
+                throw new Exception(responseContent, ex);
             }
+
         }
 
         internal async Task<LoginResponse> LoginAndGetApiKey()
         {
-            IPardotConfig config = MIFConfig.Instance as IPardotConfig;
+            IPardotConfig config = this.Config;
 
-            LoginResponse response = await this.ExecuteWebRequest<LoginResponse>(
+            LoginResponse response = await this.ExecuteApiRequestForRelativeUri<LoginResponse>(
                 relativeUri: $"login/version/4",
-                ("email", config.PardotEmail), 
-                ("password", config.PardotPassword), 
+                ("email", config.PardotEmail),
+                ("password", config.PardotPassword),
                 ("user_key", config.PardotUserKey)
             );
 
@@ -145,7 +175,9 @@ namespace MaitlandsInterfaceFramework.Pardot
 
         public async Task<Account> GetAccount()
         {
-            return await this.ExecuteWebRequest<Account>("account/version/4/do/read");
+            AccountResponse response = await this.ExecuteApiRequestForRelativeUri<AccountResponse>("account/version/4/do/read");
+
+            return response.Account;
         }
 
         public async Task<Email> GetEmail(int emailId)
@@ -153,7 +185,9 @@ namespace MaitlandsInterfaceFramework.Pardot
             if (emailId == 0)
                 throw new Exception($"{nameof(emailId)} must be greater than 0");
 
-            return await this.ExecuteWebRequest<Email>($"email/version/4/do/read/id/{emailId}");
+            EmailResponse response = await this.ExecuteApiRequestForRelativeUri<EmailResponse>($"email/version/4/do/read/id/{emailId}");
+
+            return response.Email;
         }
 
         public async Task<IEnumerable<Visit>> GetVisits(params int[] visitorIds)
@@ -163,20 +197,25 @@ namespace MaitlandsInterfaceFramework.Pardot
 
             do
             {
-                paginatedResponse = await this.ExecuteWebRequest<QueryResponse<Visit>>("visit/version/4/do/query", 
+                paginatedResponse = await this.ExecuteApiRequestForRelativeUri<QueryResponse<Visit>>("visit/version/4/do/query",
                     ("visitor_ids", String.Join(",", visitorIds)),
                     ("offset", totalVisits.Count));
 
                 totalVisits.AddRange(paginatedResponse.Result.Items);
 
-            } while (paginatedResponse.Result.Items.Count > 0 && (!paginatedResponse.Result.TotalResults.HasValue || totalVisits.Count != paginatedResponse.Result.TotalResults.Value));
+                if (paginatedResponse.Result.Items.Count < MaxQueryResults)
+                    break;
+
+            } while (paginatedResponse.Result.TotalResults.Value > totalVisits.Count);
 
             return totalVisits;
         }
 
-        public Task<IEnumerable<TargetType>> PerformBulkQuery<TargetType>(BulkQueryParameters parameters = null, JsonConverter jsonConverter = null) where TargetType : IEntity
-            => PerformBulkQuery<TargetType>(typeof(TargetType).Name, parameters);
-            
+        public Task<IEnumerable<TargetType>> PerformBulkQuery<TargetType>(BulkQueryParameters parameters = null) where TargetType : IEntity
+        {
+            return this.PerformBulkQuery<TargetType>(typeof(TargetType).Name, parameters);
+        }
+
         public async Task<IEnumerable<TargetType>> PerformBulkQuery<TargetType>(string pardotApiEndpointName, BulkQueryParameters parameters = null) where TargetType : IEntity
         {
             List<TargetType> totalResult = new List<TargetType>();
@@ -189,20 +228,25 @@ namespace MaitlandsInterfaceFramework.Pardot
             int? idGreaterThan = parameters?.IdGreaterThan;
             int? idLessThan = parameters?.IdLessThan;
             int? take = parameters?.Take;
+            string sortBy = parameters?.SortBy ?? "id";
+            SortOrder sortOrder = parameters?.SortOrder ?? SortOrder.Ascending;
 
             bool isImmutableEntity = typeof(IImmutableEntity).IsAssignableFrom(typeof(TargetType));
             bool isMutableEntity = typeof(IMutableEntity).IsAssignableFrom(typeof(TargetType));
 
             do
             {
-                QueryResponse<TargetType> queryResponse = await this.ExecuteWebRequest<QueryResponse<TargetType>>($"{pardotApiEndpointName}/version/4/do/query",
-                    //("output", "bulk"),
+                QueryResponse<TargetType> queryResponse = await this.ExecuteApiRequestForRelativeUri<QueryResponse<TargetType>>($"{pardotApiEndpointName}/version/4/do/query",
+                    ("output", "bulk"),
                     ("created_before", createdBefore),
                     ("created_after", createdAfter),
                     ("updated_before", updatedBefore),
                     ("updated_after", updatedAfter),
                     ("id_greater_than", idGreaterThan),
-                    ("id_less_than", idLessThan));
+                    ("id_less_than", idLessThan),
+                    ("sort_by", sortBy),
+                    ("sort_order", sortOrder.ToString().ToLower())
+                    );
 
                 List<TargetType> items = queryResponse.Result.Items;
 

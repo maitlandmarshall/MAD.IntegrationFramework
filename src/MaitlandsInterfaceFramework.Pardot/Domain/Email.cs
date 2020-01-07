@@ -6,7 +6,6 @@ using System.Text;
 
 namespace MaitlandsInterfaceFramework.Pardot.Domain
 { 
-    [JsonClass("email")]
     [JsonConverter(typeof(NestedJsonConverter))]
     public class Email : IImmutableEntity
     {

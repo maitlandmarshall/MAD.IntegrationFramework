@@ -20,10 +20,10 @@ namespace MaitlandsInterfaceFramework.Pardot.Domain
         public int VisitorPageViewCount { get; set; }
 
         [JsonProperty("first_visitor_page_view_at")]
-        public DateTime FirstVisitorPageViewAt { get; set; }
+        public DateTime? FirstVisitorPageViewAt { get; set; }
 
         [JsonProperty("last_visitor_page_view_at")]
-        public DateTime LastVisitorPageViewAt { get; set; }
+        public DateTime? LastVisitorPageViewAt { get; set; }
 
         [JsonProperty("duration_in_seconds")]
         public int DurationInSeconds { get; set; }

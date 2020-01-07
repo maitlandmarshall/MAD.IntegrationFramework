@@ -39,9 +39,12 @@ namespace MaitlandsInterfaceFramework.LinkedIn
             return result;
         }
 
-        public static LinkedInApiPaginatedResult<LikeElement> GetLikesForShare (this LinkedInApi api, PostShareResult share, int count = 500, int start = 0)
+        public static LinkedInApiPaginatedResult<LikeElement> GetLikesForShare(this LinkedInApi api, PostShareResult share, int count = 500, int start = 0)
+            => GetLikesForActivity(api, share.Activity, count, start);
+
+        public static LinkedInApiPaginatedResult<LikeElement> GetLikesForActivity(this LinkedInApi api, string activityUrn, int count = 500, int start = 0)
         {
-            string apiPath = $"/v2/socialActions/{share.Activity}/likes?count={count}&start={start}";
+            string apiPath = $"/v2/socialActions/{activityUrn}/likes?count={count}&start={start}";
 
             string likesJson = api.RawGetJsonQuery(apiPath, LinkedInApiFactory.GetUserAuthorization());
             LinkedInApiPaginatedResult<LikeElement> result = JsonConvert.DeserializeObject<LinkedInApiPaginatedResult<LikeElement>>(likesJson);
@@ -64,15 +67,29 @@ namespace MaitlandsInterfaceFramework.LinkedIn
                 return new List<ProfileElement>();
             }
 
-            string personIdsConcat = String.Join(",", personIds.Select(y => $"(id:{y.Split(':').Last()})"));
-            PersonList profiles = api.Profiles.GetProfilesByIds(LinkedInApiFactory.GetUserAuthorization(), personIdsConcat);
             List<ProfileElement> result = new List<ProfileElement>();
+            const int batchAmount = 50;
 
-            foreach (var p in profiles.Results)
+            do
             {
-                JProperty jProperty = p as JProperty;
-                result.Add(jProperty.First.ToObject<ProfileElement>());
-            }
+                IEnumerable<string> batch = personIds.Take(batchAmount);
+
+                string personIdsConcat = String.Join(",", batch.Select(y => $"(id:{y.Split(':').Last()})"));
+                PersonList profiles = api.Profiles.GetProfilesByIds(LinkedInApiFactory.GetUserAuthorization(), personIdsConcat);
+
+                foreach (var p in profiles.Results)
+                {
+                    JProperty jProperty = p as JProperty;
+                    ProfileElement profile = jProperty.First.ToObject<ProfileElement>();
+
+                    if (profile.ProfileId == "private")
+                        continue;
+
+                    result.Add(profile);
+                }
+
+                personIds = personIds.Skip(batchAmount);
+            } while (personIds.Any());
 
             return result;
         }

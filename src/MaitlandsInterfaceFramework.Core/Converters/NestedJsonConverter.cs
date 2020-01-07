@@ -190,6 +190,10 @@ namespace MaitlandsInterfaceFramework.Core.Converters
                     if (indexOfArray == -1)
                         return "";
 
+                    // The array is part of a nested object, not the direct object
+                    if (y.Key.IndexOf(".") < indexOfArray)
+                        return "";
+
                     string pathToArray = y.Key.Substring(0, indexOfArray);
 
                     if (!pathToArray.EndsWith(jsonClassAttributePath))
@@ -203,27 +207,28 @@ namespace MaitlandsInterfaceFramework.Core.Converters
 
             foreach (var group in groupedFlattenJsonByArrayIndex)
             {
-                Dictionary<string, object> arrayItemDictionary = group.ToDictionary(
-                    keySelector: y =>
-                    {
-                        string newKey = y.Key.Substring(y.Key.IndexOf("]") + 1);
+                Dictionary<string, object> arrayItemDictionary;
 
-                        if (newKey.StartsWith("."))
-                            newKey = newKey.Substring(1);
-
-                        return newKey;
-                    }, 
-                    elementSelector: pair => pair.Value);
-
-                object targetObjectResult;
-                if (String.IsNullOrEmpty(group.Key))
+                if (!String.IsNullOrEmpty(group.Key))
                 {
-                    targetObjectResult = this.ReadFlattenedJsonIntoTargetObjectType(arrayItemDictionary, underlyingEnumerableType);
+                    arrayItemDictionary = group.ToDictionary(
+                        keySelector: y =>
+                        {
+                            string newKey = y.Key.Substring(y.Key.IndexOf("]") + 1);
+
+                            if (newKey.StartsWith("."))
+                                newKey = newKey.Substring(1);
+
+                            return newKey;
+                        },
+                        elementSelector: pair => pair.Value);
                 }
                 else
                 {
-                    targetObjectResult = this.ReadFlattenedJsonIntoTargetObjectType(arrayItemDictionary, underlyingEnumerableType);
+                    arrayItemDictionary = group.ToDictionary(y => y.Key, y => y.Value);
                 }
+
+                object targetObjectResult = this.ReadFlattenedJsonIntoTargetObjectType(arrayItemDictionary, underlyingEnumerableType);
 
                 finalList.Add(targetObjectResult);
             }
