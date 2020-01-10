@@ -1,11 +1,14 @@
 ﻿using MaitlandsInterfaceFramework.Database;
-using MaitlandsInterfaceFramework.Services.Internals;
+using MaitlandsInterfaceFramework.Factories.Internals.Database;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Text;
 using System.Threading.Tasks;
 
-namespace MaitlandsInterfaceFramework.Services
+namespace MaitlandsInterfaceFramework.Services.Internals
 {
     [MIFTable]
     internal class ExceptionLog
@@ -26,16 +29,21 @@ namespace MaitlandsInterfaceFramework.Services
         public DbSet<ExceptionLog> ExceptionLogs { get; set; }
     }
 
-    public static class ExceptionLogService
+    internal class ExceptionDbLogService
     {
-        public static async Task LogException(this Exception exception, string interfaceName = null)
-        {
-            LogService.WriteToLog(exception.ToString());
+        private readonly IMIFDbContextFactory<ExceptionDbContext> exceptionDbContextFactory;
 
+        public ExceptionDbLogService(IMIFDbContextFactory<ExceptionDbContext> exceptionDbContextFactory)
+        {
+            this.exceptionDbContextFactory = exceptionDbContextFactory;
+        }
+
+        public async Task LogException(Exception exception, string interfaceName = null)
+        {
             if (String.IsNullOrEmpty(MIF.Config.SqlConnectionString))
                 return;
 
-            using (ExceptionDbContext db = new ExceptionDbContext())
+            using (ExceptionDbContext dbContext = this.exceptionDbContextFactory.Create())
             {
                 ExceptionLog log = new ExceptionLog
                 {
@@ -45,9 +53,8 @@ namespace MaitlandsInterfaceFramework.Services
                     Interface = interfaceName
                 };
 
-                db.ExceptionLogs.Add(log);
-
-                await db.SaveChangesAsync();
+                dbContext.ExceptionLogs.Add(log);
+                await dbContext.SaveChangesAsync();
             }
         }
     }

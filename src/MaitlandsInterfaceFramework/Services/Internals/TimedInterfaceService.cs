@@ -2,6 +2,7 @@
 using MaitlandsInterfaceFramework.Core.Services.Internals;
 using MaitlandsInterfaceFramework.Database;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -13,26 +14,21 @@ using System.Threading.Tasks;
 
 namespace MaitlandsInterfaceFramework.Services.Internals
 {
-    internal partial class TimedInterfaceService
+    internal class TimedInterfaceService
     {
         private List<TimedInterface> TimedInterfaces = new List<TimedInterface>();
         private volatile object SyncToken = new object();
 
-        public TimedInterfaceService()
+        ILogger<TimedInterfaceService> Logger;
+        ExceptionDbLogService ExceptionDbLogger;
+
+        public TimedInterfaceService(ILogger<TimedInterfaceService> logger, ExceptionDbLogService exceptionDbLogger)
         {
-            try
-            {
-                this.LoadInterfaces();
-                this.StartInterfaces();
-            }
-            catch (Exception ex)
-            {
-                ex.LogException().Wait();
-                throw;
-            }
+            this.Logger = logger;
+            this.ExceptionDbLogger = exceptionDbLogger;
         }
 
-        private void LoadInterfaces()
+        internal void LoadInterfaces()
         {
             // Get the assembly which is consuming the library, i.e the exe assembly
             Assembly entryAssembly = Assembly.GetEntryAssembly();
@@ -46,7 +42,7 @@ namespace MaitlandsInterfaceFramework.Services.Internals
             }
         }
 
-        private void StartInterfaces()
+        internal void StartInterfaces()
         {
             // Create a timer for each interface
             foreach (TimedInterface timedInterface in this.TimedInterfaces)
@@ -91,7 +87,9 @@ namespace MaitlandsInterfaceFramework.Services.Internals
             }
             catch (Exception ex)
             {
-                await ex.LogException(serviceTimer.TimedInterface.GetType().Name);
+                this.Logger.LogError(ex, ex.Message);
+                await this.ExceptionDbLogger.LogException(ex, serviceTimer.TimedInterface.GetType().Name);
+
                 serviceTimer.Interval = TimeSpan.FromHours(6).TotalMilliseconds;
             }
             finally

@@ -1,66 +1,38 @@
-﻿using Dapper;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using static MaitlandsInterfaceFramework.Services.Internals.LogService;
 
-namespace MaitlandsInterfaceFramework.Database.Internals
+namespace MaitlandsInterfaceFramework.Services.Internals.Database
 {
-    internal static class AutomaticMigration
+    internal class SqlBuilderService
     {
-        /// <summary>
-        /// Creates any tables which are missing in the target SQL database
-        /// </summary>
-        public static void EnsureDatabaseUpToDate(MIFDbContext dbContext)
+        public string BuildCreateTableSqlStatementForIEntityType(IEntityType entityType)
         {
-            // Loop through each entity defined as a DbSet in the DbContext's Model
-            foreach (IEntityType entityType in dbContext.Model.GetEntityTypes())
-            {
-                string tableName = entityType.GetTableName();
+            // Get all the properties from the entity that need to be converted into table columns
+            IEnumerable<IProperty> tableProperties = entityType
+                .GetProperties()
+                // This will ensure the id columns appear closer to the start when doing a select * from [tableName]
+                .OrderByDescending(y => y.Name.ToLower().EndsWith("id"));
 
-                if (String.IsNullOrEmpty(tableName))
-                    continue;
+            // Begin building the CREATE TABLE statement
+            StringBuilder queryBuilder = new StringBuilder();
+            queryBuilder.AppendLine($"CREATE TABLE {entityType.GetTableName()}");
+            queryBuilder.AppendLine("(");
 
-                // Query the tableType from the database. It could potentially be a view.
-                string tableType = dbContext.Connection
-                        .Query<string>(
-                            sql: "SELECT TABLE_TYPE FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = @TableName",
-                            param: new
-                            {
-                                TableName = tableName
-                            }
-                        ).FirstOrDefault();
+            queryBuilder.AppendLine(
+                // Converts a list of IProperty into a comma separated string in a SQL create table format ie:
+                // "Id int not null identity (1,1) primary key, ExampleCol nvarchar(max) null"
 
-                // If tableType comes back as null, the table doesn't exist and must be created.
-                bool tableExists = !String.IsNullOrEmpty(tableType);
+                String.Join("," + Environment.NewLine, tableProperties.Select(y => IPropertyToSqlColumnString(y)))
+            );
 
-                if (tableExists)
-                    continue;
+            // Finish the CREATE TABLE statement
+            queryBuilder.AppendLine(")");
 
-                WriteToLog($"Creating {tableName} table");
-
-                // Begin building the CREATE TABLE statement
-                StringBuilder queryBuilder = new StringBuilder();
-                queryBuilder.AppendLine($"CREATE TABLE {tableName}");
-                queryBuilder.AppendLine("(");
-
-                queryBuilder.AppendLine(
-                    String.Join("," + Environment.NewLine,
-                        entityType
-                        .GetProperties()
-                        .OrderByDescending(y => y.Name.ToLower().EndsWith("id"))
-                        .Select(y => IPropertyToSqlColumnString(y))
-                    )
-                );
-
-                queryBuilder.AppendLine(")");
-
-                string createTableQuery = queryBuilder.ToString();
-
-                dbContext.Connection.Execute(createTableQuery);
-            }
+            return queryBuilder.ToString();
         }
 
         private static string IPropertyToSqlColumnString(IProperty property)

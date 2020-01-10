@@ -36,7 +36,7 @@ namespace MaitlandsInterfaceFramework.Core.Services.Internals
 
         #region LOAD CONFIGURATION
 
-        public static void LoadConfiguration()
+        public static MIFConfig LoadConfiguration()
         {
             Type typeWhichInheritsFromMIFConfig = GetMifsConfigConfigurationType();
 
@@ -49,6 +49,8 @@ namespace MaitlandsInterfaceFramework.Core.Services.Internals
                 string settingsData = File.ReadAllText(SettingsFilePath);
                 MIFConfig.Instance = JsonConvert.DeserializeObject(settingsData, typeWhichInheritsFromMIFConfig) as MIFConfig;
             }
+
+            return MIFConfig.Instance;
         }
 
         public static void LoadConfiguration (TimedInterface timedInterface)

@@ -1,25 +1,17 @@
-﻿using MaitlandsInterfaceFramework.Database.Internals;
-using MaitlandsInterfaceFramework.Services;
+﻿using MaitlandsInterfaceFramework.Services.Internals.Database;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Reflection;
-using System.Threading.Tasks;
 
 namespace MaitlandsInterfaceFramework.Database
 {
     public abstract class MIFDbContext : DbContext
     {
-        private static List<Type> MigratedContexts = new List<Type>();
-        private static volatile object SyncToken = new object();
-
-        public DbConnection Connection
-        {
-            get => this.Database.GetDbConnection();
-        }
+        public DbConnection Connection => this.Database.GetDbConnection();
 
         public MIFDbContext() : this(MIF.Config.SqlConnectionString) { }
 
@@ -27,25 +19,6 @@ namespace MaitlandsInterfaceFramework.Database
         {
             this.Database.SetCommandTimeout(TimeSpan.FromMinutes(10));
             this.Database.EnsureCreated();
-
-            lock (SyncToken)
-            {
-                if (!MigratedContexts.Contains(this.GetType()))
-                {
-                    try
-                    {
-                        AutomaticMigration.EnsureDatabaseUpToDate(this);
-                    }
-                    catch (Exception ex)
-                    {
-                        _ = ex.LogException();
-                    }
-                    finally
-                    {
-                        MigratedContexts.Add(this.GetType());
-                    }
-                }
-            }
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
