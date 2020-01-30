@@ -1,4 +1,9 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using MAD.IntegrationFramework.Database;
+using MAD.IntegrationFramework.Http;
+using MAD.IntegrationFramework.Integrations;
+using MAD.IntegrationFramework.Logging;
+using MAD.IntegrationFramework.Services;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Runtime.CompilerServices;
@@ -21,12 +26,13 @@ namespace MAD.IntegrationFramework
                     logging.Services.AddTransient(typeof(ILogger<>), typeof(Logger<>));
                 })
                 .AddSingleton<FrameworkContainer>()
-                .AddSingleton<AutomaticMigrationProvider>()
+                .AddSingleton<AutomaticMigrationService>()
                 .AddSingleton<TimedInterfaceController>()
                 .AddSingleton<IWebHostFactory, DefaultWebHostFactory>()
                 .AddTransient<ExceptionDbLogger>()
-                .AddTransient<SqlBuilder>()
-                .AddTransient(typeof(IMIFDbContextFactory<>), typeof(MIFDbContextFactory<>));
+                .AddTransient<SqlStatementBuilder>()
+                .AddTransient(typeof(IMIFDbContextFactory<>), typeof(MIFDbContextFactory<>))
+                .AddTransient<IRelativeFilePathResolver, DefaultRelativeFilePathResolver>();
 
             ServiceProvider = serviceCollection.BuildServiceProvider();
         }

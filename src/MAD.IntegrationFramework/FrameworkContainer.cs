@@ -2,6 +2,8 @@
 using MAD.IntegrationFramework.Core.Services.Internals;
 using MAD.IntegrationFramework.Factories.Http;
 using MAD.IntegrationFramework.Http;
+using MAD.IntegrationFramework.Integrations;
+using MAD.IntegrationFramework.Logging;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -48,39 +50,42 @@ namespace MAD.IntegrationFramework
 
         #endregion
 
-        internal TimedInterfaceController TimedInterfaceService { get; private set; }
-        internal CancellationTokenSource ServiceCancellationToken { get; private set; }
+        private readonly TimedInterfaceController timedInterfaceService;
+        private readonly CancellationTokenSource serviceCancellationToken;
 
-        private readonly ILogger Logger;
-        private readonly ExceptionDbLogger ExceptionDbLogger;
-        private readonly IWebHostFactory WebHostFactory;
+        private readonly ILogger logger;
+        private readonly IExceptionLogger exceptionLogger;
+        private readonly IWebHostFactory webHostFactory;
 
-        private IWebHost WebHost;
+        private IWebHost webHost;
 
-        public FrameworkContainer(ILogger<FrameworkContainer> logger, ExceptionDbLogger exceptionDbLogger, TimedInterfaceController timedInterfaceService, IWebHostFactory webHostFactory)
+        public FrameworkContainer(ILogger<FrameworkContainer> logger,
+                                  IExceptionLogger exceptionLogger,
+                                  TimedInterfaceController timedInterfaceService,
+                                  IWebHostFactory webHostFactory)
         {
-            this.Logger = logger;
-            this.ExceptionDbLogger = exceptionDbLogger;
-            this.TimedInterfaceService = timedInterfaceService;
-            this.WebHostFactory = webHostFactory;
+            this.logger = logger;
+            this.exceptionLogger = exceptionLogger;
+            this.timedInterfaceService = timedInterfaceService;
+            this.webHostFactory = webHostFactory;
+
+            this.serviceCancellationToken = new CancellationTokenSource();
         }
 
         public async Task Start()
         {
-            this.Logger.LogInformation($"MIF initializing {DateTime.Now}");
+            this.logger.LogInformation($"MIF initializing {DateTime.Now}");
 
             try
             {
                 MIFConfig config = ConfigurationService.LoadConfiguration();
 
-                this.Logger.LogInformation($"Binding Port: {config.BindingPort}");
-                this.Logger.LogInformation($"Binding Path: {config.BindingPath}");
-
-                this.ServiceCancellationToken = new CancellationTokenSource();
+                this.logger.LogInformation($"Binding Port: {config.BindingPort}");
+                this.logger.LogInformation($"Binding Path: {config.BindingPath}");
 
                 if (!HaveVisibleConsole())
                 {
-                    this.Logger.LogInformation("Running as service");
+                    this.logger.LogInformation("Running as service");
 
                     _ = Host.CreateDefaultBuilder()
                             .UseWindowsService()
@@ -89,32 +94,32 @@ namespace MAD.IntegrationFramework
                                 services.AddHostedService<MIFWindowsService>();
                             })
                             .Build()
-                            .RunAsync(this.ServiceCancellationToken.Token);
+                            .RunAsync(this.serviceCancellationToken.Token);
                 }
                 else
                 {
-                    this.Logger.LogInformation("Running as console");
+                    this.logger.LogInformation("Running as console");
                 }
 
-                this.Logger.LogInformation("Starting Http Server");
+                this.logger.LogInformation("Starting Http Server");
 
-                this.WebHost = this.WebHostFactory.CreateWebHost();
-                await this.WebHost.StartAsync(this.ServiceCancellationToken.Token);
+                this.webHost = this.webHostFactory.CreateWebHost();
+                await this.webHost.StartAsync(this.serviceCancellationToken.Token);
                 
-                this.Logger.LogInformation("Http Server started");
-                this.Logger.LogInformation("Starting Timed Interface Service");
+                this.logger.LogInformation("Http Server started");
+                this.logger.LogInformation("Starting Timed Interface Service");
 
-                this.TimedInterfaceService.LoadInterfaces();
-                this.TimedInterfaceService.StartInterfaces();
+                this.timedInterfaceService.LoadInterfaces();
+                this.timedInterfaceService.StartInterfaces();
 
-                this.Logger.LogInformation("Timed Tnterface Service started");
+                this.logger.LogInformation("Timed Tnterface Service started");
 
-                await Task.Delay(TimeSpan.FromMilliseconds(-1), this.ServiceCancellationToken.Token);
+                await Task.Delay(TimeSpan.FromMilliseconds(-1), this.serviceCancellationToken.Token);
             }
             catch (Exception ex)
             {
-                this.Logger.LogError(ex, ex.Message);
-                await this.ExceptionDbLogger.LogException(ex);
+                this.logger.LogError(ex, ex.Message);
+                await this.exceptionLogger.LogException(ex);
 
                 throw;
             }
@@ -124,13 +129,13 @@ namespace MAD.IntegrationFramework
         {
             try
             {
-                this.TimedInterfaceService.StopInterfaces();
-                await this.WebHost.StopAsync(TimeSpan.FromSeconds(60));
+                this.timedInterfaceService.StopInterfaces();
+                await this.webHost.StopAsync(TimeSpan.FromSeconds(60));
             }
             finally
             {
-                this.ServiceCancellationToken.Cancel();
-                this.ServiceCancellationToken.Dispose();
+                this.serviceCancellationToken.Cancel();
+                this.serviceCancellationToken.Dispose();
             }
         }
     }

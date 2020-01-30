@@ -8,9 +8,9 @@ namespace MAD.IntegrationFramework.Database
 {
     internal class MIFDbContextFactory<DbContext> : IMIFDbContextFactory<DbContext> where DbContext : MIFDbContext, new()
     {
-        private AutomaticMigrationProvider AutomaticMigrationService;
+        private AutomaticMigrationService AutomaticMigrationService;
 
-        public MIFDbContextFactory(AutomaticMigrationProvider automaticMigrationService)
+        public MIFDbContextFactory(AutomaticMigrationService automaticMigrationService)
         {
             this.AutomaticMigrationService = automaticMigrationService;
         }

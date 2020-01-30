@@ -4,7 +4,8 @@ using System.Text;
 
 namespace MAD.IntegrationFramework.Services
 {
-    class RelativeFilePathService
+    internal interface IRelativeFilePathResolver
     {
+        string GetRelativeFilePath(string filePath);
     }
 }

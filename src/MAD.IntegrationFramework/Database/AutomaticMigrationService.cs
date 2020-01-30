@@ -10,7 +10,7 @@ using System.Text;
 
 namespace MAD.IntegrationFramework.Database
 {
-    internal class AutomaticMigrationProvider
+    internal class AutomaticMigrationService
     {
         private readonly ILogger Logger;
         private readonly SqlStatementBuilder SqlBuilder;
@@ -18,7 +18,7 @@ namespace MAD.IntegrationFramework.Database
         private readonly List<Type> MigratedContexts;
         private readonly object SyncToken;
 
-        public AutomaticMigrationProvider(ILogger<AutomaticMigrationProvider> logger, SqlStatementBuilder sqlBuilder)
+        public AutomaticMigrationService(ILogger<AutomaticMigrationService> logger, SqlStatementBuilder sqlBuilder)
         {
             this.Logger = logger;
             this.SqlBuilder = sqlBuilder;

@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using MAD.IntegrationFramework.Services;
+using Newtonsoft.Json;
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -9,20 +10,27 @@ namespace MAD.IntegrationFramework.Configuration
 {
     internal class MIFConfigFactory
     {
-        internal string SettingsDirectory => Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
-        private string SettingsFilePath => Path.Combine(this.SettingsDirectory, "settings.json");
+        private const string SettingsFileName = "settings.json";
+
+        private readonly IRelativeFilePathResolver relativeFilePathResolver;
+
+        public MIFConfigFactory(IRelativeFilePathResolver relativeFilePathResolver)
+        {
+            this.relativeFilePathResolver = relativeFilePathResolver;
+        }
 
         public MIFConfig Load()
         {
             Type typeWhichInheritsFromMIFConfig = this.GetMifsConfigConfigurationType();
+            string settingsFilePath = this.relativeFilePathResolver.GetRelativeFilePath(SettingsFileName);
 
-            if (!File.Exists(this.SettingsFilePath))
+            if (!File.Exists(settingsFilePath))
             {
                 return Activator.CreateInstance(typeWhichInheritsFromMIFConfig) as MIFConfig;
             }
             else
             {
-                string settingsData = File.ReadAllText(SettingsFilePath);
+                string settingsData = File.ReadAllText(settingsFilePath);
                 return JsonConvert.DeserializeObject(settingsData, typeWhichInheritsFromMIFConfig) as MIFConfig;
             }
         }
