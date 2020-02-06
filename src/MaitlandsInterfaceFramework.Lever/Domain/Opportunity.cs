@@ -8,11 +8,6 @@ namespace MaitlandsInterfaceFramework.Lever.Domain
 {
     public class Opportunity
     {
-        public class Phone
-        {
-            public string Value { get; set; }
-        }
-
         public class StageChange
         {
             public string ToStageId { get; set; }
@@ -20,7 +15,7 @@ namespace MaitlandsInterfaceFramework.Lever.Domain
             public string UserId { get; set; }
 
             [JsonConverter(typeof(MillisecondEpochConverter))]
-            public DateTime UpdatedAt { get; set; }
+            public DateTime? UpdatedAt { get; set; }
         }
 
         public class Url
@@ -36,7 +31,7 @@ namespace MaitlandsInterfaceFramework.Lever.Domain
                 public bool Allowed { get; set; }
 
                 [JsonConverter(typeof(MillisecondEpochConverter))]
-                public DateTime ExpiresAt { get; set; }
+                public DateTime? ExpiresAt { get; set; }
             }
 
             public DataProtectionDetail Store { get; set; }
@@ -63,7 +58,7 @@ namespace MaitlandsInterfaceFramework.Lever.Domain
         public DateTime LastAdvancedAt { get; set; }
 
         [JsonConverter(typeof(MillisecondEpochConverter))]
-        public DateTime SnoozedUntil { get; set; }
+        public DateTime? SnoozedUntil { get; set; }
 
         [JsonConverter(typeof(MillisecondEpochConverter))]
         public DateTime? ArchivedAt { get; set; }

@@ -131,5 +131,20 @@ namespace MaitlandsInterfaceFramework.Lever.Tests
             Assert.IsNotNull(users);
             Assert.IsTrue(users.Any());
         }
+
+        [TestMethod]
+        public async Task TestCandidateApplicationsAsync()
+        {
+            LeverApiClient client = new LeverApiClient();
+            IEnumerable<Opportunity> candidates = await client.Candidates(50);
+
+            foreach (var c in candidates)
+            {
+                var cApplications = await client.ApplicationsForCandidate(c.Id);
+
+                if (cApplications.Any())
+                    break;
+            }
+        }
     }
 }

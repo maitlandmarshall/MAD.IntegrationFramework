@@ -33,7 +33,7 @@ namespace MaitlandsInterfaceFramework.Lever.Domain
         public int Duration { get; set; }
         public string Location { get; set; }
         public string FeedbackTemplate { get; set; }
-        public string FeedbackForms { get; set; }
+        public string[] FeedbackForms { get; set; }
         public string FeedbackReminder { get; set; }
         public string User { get; set; }
         public string Stage { get; set; }
@@ -42,6 +42,6 @@ namespace MaitlandsInterfaceFramework.Lever.Domain
         [JsonProperty("canceledAt")]
         public DateTime? CancelledAt { get; set; }
 
-        public string Postings { get; set; }
+        public string[] Postings { get; set; }
     }
 }

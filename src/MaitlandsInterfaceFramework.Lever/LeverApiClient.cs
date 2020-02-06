@@ -152,5 +152,10 @@ namespace MaitlandsInterfaceFramework.Lever
         {
             return await this.GetAllForEndpoint<User>(nameof(this.Users), take);
         }
+
+        public async Task<IEnumerable<Application>> ApplicationsForCandidate(string candidateId, int? take = null)
+        {
+            return await this.GetAllForEndpoint<Application>($"candidates/{candidateId}/applications", take);
+        }
     }
 }

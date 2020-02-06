@@ -24,5 +24,15 @@ namespace MaitlandsInterfaceFramework.Lever.Domain
         public string Creator { get; set; }
 
         public Field[] Fields { get; set; }
+
+        public bool? Approved { get; set; }
+
+        [JsonConverter(typeof(MillisecondEpochConverter))]
+        public DateTime? ApprovedAt { get; set; }
+
+        public string Posting { get; set; }
+
+        [JsonConverter(typeof(MillisecondEpochConverter))]
+        public DateTime? SentAt { get; set; }
     }
 }

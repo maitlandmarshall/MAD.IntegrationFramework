@@ -66,7 +66,7 @@ namespace MaitlandsInterfaceFramework.Database.Internals
         private static string IPropertyToSqlColumnString(IProperty property)
         {
             StringBuilder columnBuilder = new StringBuilder();
-            columnBuilder.Append(property.Name);
+            columnBuilder.Append($"[{property.Name}]");
             columnBuilder.Append(" ");
 
             Type propertyType = property.PropertyInfo.PropertyType;
