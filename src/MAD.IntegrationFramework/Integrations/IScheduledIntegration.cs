@@ -1,11 +1,8 @@
-﻿using MAD.IntegrationFramework.Core.Configuration;
-using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System;
 
 namespace MAD.IntegrationFramework.Integrations
 {
-    public interface IScheduledInterface
+    public interface IScheduledIntegration
     {
         DateTime NextRunDateTime { get; }
 

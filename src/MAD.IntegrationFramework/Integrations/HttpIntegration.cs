@@ -2,7 +2,7 @@
 
 namespace MAD.IntegrationFramework.Integrations
 {
-    public abstract class HttpInterface : Controller
+    public abstract class HttpIntegration : Controller
     {
     }
 }

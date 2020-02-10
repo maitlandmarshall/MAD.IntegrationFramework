@@ -1,7 +1,4 @@
-﻿using MAD.IntegrationFramework.Core.Configuration;
-using MAD.IntegrationFramework.Core.Services.Internals;
-using MAD.IntegrationFramework.Factories.Http;
-using MAD.IntegrationFramework.Http;
+﻿using MAD.IntegrationFramework.Http;
 using MAD.IntegrationFramework.Integrations;
 using MAD.IntegrationFramework.Logging;
 using Microsoft.AspNetCore.Hosting;
@@ -50,7 +47,7 @@ namespace MAD.IntegrationFramework
 
         #endregion
 
-        private readonly TimedInterfaceController timedInterfaceService;
+        private readonly TimedIntegrationController timedInterfaceService;
         private readonly CancellationTokenSource serviceCancellationToken;
 
         private readonly ILogger logger;
@@ -61,7 +58,7 @@ namespace MAD.IntegrationFramework
 
         public FrameworkContainer(ILogger<FrameworkContainer> logger,
                                   IExceptionLogger exceptionLogger,
-                                  TimedInterfaceController timedInterfaceService,
+                                  TimedIntegrationController timedInterfaceService,
                                   IWebHostFactory webHostFactory)
         {
             this.logger = logger;
@@ -105,12 +102,12 @@ namespace MAD.IntegrationFramework
 
                 this.webHost = this.webHostFactory.CreateWebHost();
                 await this.webHost.StartAsync(this.serviceCancellationToken.Token);
-                
+
                 this.logger.LogInformation("Http Server started");
                 this.logger.LogInformation("Starting Timed Interface Service");
 
                 this.timedInterfaceService.LoadInterfaces();
-                this.timedInterfaceService.StartInterfaces();
+                this.timedInterfaceService.StartAsync();
 
                 this.logger.LogInformation("Timed Tnterface Service started");
 

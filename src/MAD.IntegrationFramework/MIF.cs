@@ -1,4 +1,5 @@
-﻿using MAD.IntegrationFramework.Database;
+﻿using MAD.IntegrationFramework.Configuration;
+using MAD.IntegrationFramework.Database;
 using MAD.IntegrationFramework.Http;
 using MAD.IntegrationFramework.Integrations;
 using MAD.IntegrationFramework.Logging;
@@ -27,12 +28,17 @@ namespace MAD.IntegrationFramework
                 })
                 .AddSingleton<FrameworkContainer>()
                 .AddSingleton<AutomaticMigrationService>()
-                .AddSingleton<TimedInterfaceController>()
+                .AddSingleton<TimedIntegrationController>()
                 .AddSingleton<IWebHostFactory, DefaultWebHostFactory>()
                 .AddTransient<ExceptionDbLogger>()
                 .AddTransient<SqlStatementBuilder>()
+                .AddTransient<EmbeddedResourceService>()
+                .AddTransient<IntegrationConfigurationService>()
+                .AddTransient<FrameworkConfigurationService>()
                 .AddTransient(typeof(IMIFDbContextFactory<>), typeof(MIFDbContextFactory<>))
-                .AddTransient<IRelativeFilePathResolver, DefaultRelativeFilePathResolver>();
+
+                .AddTransient<IRelativeFilePathResolver, DefaultRelativeFilePathResolver>()
+                .AddTransient<IIntegrationPathResolver, DefaultIntegrationFilePathResolver>();
 
             ServiceProvider = serviceCollection.BuildServiceProvider();
         }

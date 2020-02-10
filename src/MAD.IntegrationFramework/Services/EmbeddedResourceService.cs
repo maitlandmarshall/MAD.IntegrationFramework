@@ -5,9 +5,9 @@ using System.Reflection;
 
 namespace MAD.IntegrationFramework.Services
 {
-    public static class EmbeddedResourceService
+    public class EmbeddedResourceService
     {
-        public static string ResourceAsString(string resourceName)
+        public string ResourceAsString(string resourceName)
         {
             Assembly callingAssembly = Assembly.GetCallingAssembly();
 

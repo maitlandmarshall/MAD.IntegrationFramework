@@ -1,25 +1,15 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
+using System.Reflection;
 using System.Runtime.CompilerServices;
-using System.Threading.Tasks;
-using System.Timers;
+using System.Text;
 
-[assembly: InternalsVisibleTo("MAD.IntegrationFramework")]
 namespace MAD.IntegrationFramework.Integrations
 {
-    public abstract class TimedInterface
+    internal class TimedIntegrationTimer : System.Timers.Timer, INotifyPropertyChanged
     {
-        internal TimedInterfaceServiceTimer Timer { get; set; }
-
-        public abstract TimeSpan Interval { get; }
-        public abstract bool IsEnabled { get; }
-
-        public abstract Task Execute();
-    }
-
-    internal class TimedInterfaceServiceTimer : System.Timers.Timer, INotifyPropertyChanged
-    {
-        public TimedInterface TimedInterface { get; private set; }
+        public Type TimedIntegrationType { get; private set; }
 
         private DateTime? lastFinish;
         public DateTime? LastFinish
@@ -34,11 +24,14 @@ namespace MAD.IntegrationFramework.Integrations
 
         public DateTime? LastStart { get; set; }
 
-        public TimedInterfaceServiceTimer(TimedInterface timedInterface)
+        public TimedIntegrationTimer(Type timedIntegrationType)
         {
-            this.Interval = timedInterface.Interval.TotalMilliseconds;
+            TimedIntegrationAttribute timedIntegrationAttribute = timedIntegrationType.GetCustomAttribute<TimedIntegrationAttribute>(true);
+
+            this.TimedIntegrationType = timedIntegrationType;
+
+            this.Interval = timedIntegrationAttribute.Frequency.TotalMilliseconds;
             this.AutoReset = true;
-            this.TimedInterface = timedInterface;
         }
 
         public event PropertyChangedEventHandler PropertyChanged;

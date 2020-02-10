@@ -8,11 +8,11 @@ namespace MAD.IntegrationFramework.Services
 {
     internal class DefaultRelativeFilePathResolver : IRelativeFilePathResolver
     {
-        private string SettingsDirectory => Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
+        private string RootDirectory => Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
 
         public string GetRelativeFilePath (string filePath)
         {
-            return Path.Combine(this.SettingsDirectory, filePath);
+            return Path.Combine(this.RootDirectory, filePath);
         }
     }
 }

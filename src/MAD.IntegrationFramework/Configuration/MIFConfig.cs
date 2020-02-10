@@ -13,7 +13,7 @@
 
         public void Save()
         {
-            ConfigurationService.SaveConfiguration(this);
+            FrameworkConfigurationService.SaveConfiguration(this);
         }
     }
 }
