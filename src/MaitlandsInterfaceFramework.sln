@@ -31,9 +31,15 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MaitlandsInterfaceFramework
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Lever", "Lever", "{DA1D26CA-F01E-454B-96F6-9705D2ED7803}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MaitlandsInterfaceFramework.Lever", "MaitlandsInterfaceFramework.Lever\MaitlandsInterfaceFramework.Lever.csproj", "{BDE7F1B9-4848-4A6B-AE92-051DB9244A04}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MaitlandsInterfaceFramework.Lever", "MaitlandsInterfaceFramework.Lever\MaitlandsInterfaceFramework.Lever.csproj", "{BDE7F1B9-4848-4A6B-AE92-051DB9244A04}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MaitlandsInterfaceFramework.Lever.Tests", "MaitlandsInterfaceFramework.Lever.Tests\MaitlandsInterfaceFramework.Lever.Tests.csproj", "{B1118C56-62B5-4C88-9E38-C3AD33623496}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MaitlandsInterfaceFramework.Lever.Tests", "MaitlandsInterfaceFramework.Lever.Tests\MaitlandsInterfaceFramework.Lever.Tests.csproj", "{B1118C56-62B5-4C88-9E38-C3AD33623496}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Salesforce", "Salesforce", "{159D18C8-876E-4884-A01C-7DEBB710D72D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MaitlandsInterfaceFramework.Salesforce", "MaitlandsInterfaceFramework.Salesforce\MaitlandsInterfaceFramework.Salesforce.csproj", "{4F8D4C9D-3B91-4A72-94A5-F7046ADCD4F9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MaitlandsInterfaceFramework.Salesforce.Tests", "MaitlandsInterfaceFramework.Salesforce.Tests\MaitlandsInterfaceFramework.Salesforce.Tests.csproj", "{7B8D964F-B893-4661-8B38-727AE60B1C66}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -81,6 +87,14 @@ Global
 		{B1118C56-62B5-4C88-9E38-C3AD33623496}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B1118C56-62B5-4C88-9E38-C3AD33623496}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B1118C56-62B5-4C88-9E38-C3AD33623496}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4F8D4C9D-3B91-4A72-94A5-F7046ADCD4F9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4F8D4C9D-3B91-4A72-94A5-F7046ADCD4F9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4F8D4C9D-3B91-4A72-94A5-F7046ADCD4F9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4F8D4C9D-3B91-4A72-94A5-F7046ADCD4F9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7B8D964F-B893-4661-8B38-727AE60B1C66}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7B8D964F-B893-4661-8B38-727AE60B1C66}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7B8D964F-B893-4661-8B38-727AE60B1C66}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7B8D964F-B893-4661-8B38-727AE60B1C66}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -98,6 +112,9 @@ Global
 		{DA1D26CA-F01E-454B-96F6-9705D2ED7803} = {7DB5F620-7A1F-4D93-A756-F2A16604C02B}
 		{BDE7F1B9-4848-4A6B-AE92-051DB9244A04} = {DA1D26CA-F01E-454B-96F6-9705D2ED7803}
 		{B1118C56-62B5-4C88-9E38-C3AD33623496} = {DA1D26CA-F01E-454B-96F6-9705D2ED7803}
+		{159D18C8-876E-4884-A01C-7DEBB710D72D} = {7DB5F620-7A1F-4D93-A756-F2A16604C02B}
+		{4F8D4C9D-3B91-4A72-94A5-F7046ADCD4F9} = {159D18C8-876E-4884-A01C-7DEBB710D72D}
+		{7B8D964F-B893-4661-8B38-727AE60B1C66} = {159D18C8-876E-4884-A01C-7DEBB710D72D}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {A3104704-16DA-4E62-8A60-10EBEE01BDEC}

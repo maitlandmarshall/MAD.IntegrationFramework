@@ -341,3 +341,4 @@ healthchecksdb
 /src/MaitlandsInterfaceFramework.Pardot.Tests/PardotApiKeys.txt
 /src/MaitlandsInterfaceFramework.Namely.Tests/NamelyApiKeys.txt
 /src/MaitlandsInterfaceFramework.Lever.Tests/ApiKey.txt
+/src/MaitlandsInterfaceFramework.Salesforce.Tests/ApiKey.txt
