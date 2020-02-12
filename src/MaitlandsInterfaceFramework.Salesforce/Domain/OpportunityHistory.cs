@@ -4,19 +4,19 @@ using System.Text;
 
 namespace MaitlandsInterfaceFramework.Salesforce.Domain
 {
-    public class OpportunityHistory
+    public class OpportunityHistory : ISalesforceEntity
     {
         public string Id { get; set; }
-        public decimal? Amount { get; set; }
-        public DateTime? CloseDate { get; set; }
-        public bool? IsDeleted { get; set; }
-        public string StageName { get; set; }
-        public string CreatedById { get; set; }
-        public string CreatedDate { get; set; }
-        public decimal? Probability { get; set; }
         public string OpportunityId { get; set; }
-        public string SystemModstamp { get; set; }
-        public decimal? ExpectedRevenue { get; set; }
+        public string CreatedById { get; set; }
+        public DateTime CreatedDate { get; set; }
+        public string StageName { get; set; }
+        public double? Amount { get; set; }
+        public double? ExpectedRevenue { get; set; }
+        public DateTime? CloseDate { get; set; }
+        public double? Probability { get; set; }
         public string ForecastCategory { get; set; }
+        public DateTime SystemModstamp { get; set; }
+        public bool IsDeleted { get; set; }
     }
 }
