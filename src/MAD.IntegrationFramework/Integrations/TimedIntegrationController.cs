@@ -1,14 +1,9 @@
 ﻿using MAD.IntegrationFramework.Core;
-using MAD.IntegrationFramework.Core.Services.Internals;
-using MAD.IntegrationFramework.Database;
 using MAD.IntegrationFramework.Logging;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -25,7 +20,9 @@ namespace MAD.IntegrationFramework.Integrations
 
         private List<TimedIntegrationTimer> timedIntegrationTimers;
 
-        public TimedIntegrationController(ILogger<TimedIntegrationController> logger, IExceptionLogger exceptionLogger, IntegrationConfigurationService integrationConfigurationService)
+        public TimedIntegrationController(ILogger<TimedIntegrationController> logger,
+                                          IExceptionLogger exceptionLogger,
+                                          IntegrationConfigurationService integrationConfigurationService)
         {
             this.logger = logger;
             this.exceptionLogger = exceptionLogger;
@@ -46,7 +43,11 @@ namespace MAD.IntegrationFramework.Integrations
         internal async Task StartAsync()
         {
             IEnumerable<Type> timedIntegrationTypesInEntryAssembly = this.GetTimedIntegrationTypesInAssembly(Assembly.GetEntryAssembly());
+            await this.StartAsync(timedIntegrationTypesInEntryAssembly);
+        }
 
+        internal async Task StartAsync (IEnumerable<Type> integrationTypes)
+        {
             // Create a timer for each interface
             foreach (Type timedIntegrationType in timedIntegrationTypesInEntryAssembly)
             {
@@ -121,7 +122,7 @@ namespace MAD.IntegrationFramework.Integrations
                         interfaceToRunAfterTimer.PropertyChanged -= InterfaceToRunAfterTimer_PropertyChanged;
                         waitForFinishTaskCompletionSource.SetResult(true);
                     }
-                        
+
                 }
 
                 // Block the flow of the function until the LastFinish property has been updated
@@ -129,7 +130,7 @@ namespace MAD.IntegrationFramework.Integrations
             }
         }
 
-        private async Task ExecuteInterface (TimedIntegration timedInterface)
+        private async Task ExecuteInterface(TimedIntegration timedInterface)
         {
             TimedInterfaceDbContext db = null;
             TimedInterfaceLog log = null;
@@ -187,10 +188,10 @@ namespace MAD.IntegrationFramework.Integrations
             }
             finally
             {
-            
+
                 // Save the configuration data after each execution of the TimedInterface
                 ConfigurationService.SaveConfiguration(timedInterface);
-                
+
                 if (db != null)
                 {
                     log.EndDateTime = DateTime.Now;

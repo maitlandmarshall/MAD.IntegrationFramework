@@ -1,5 +1,4 @@
-﻿using MAD.IntegrationFramework.Core.Configuration;
-using Sparkle.LinkedInNET;
+﻿using Sparkle.LinkedInNET;
 
 namespace MAD.IntegrationFramework.LinkedIn
 {

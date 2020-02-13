@@ -1,11 +1,7 @@
 ﻿using MAD.IntegrationFramework.Database;
-using MAD.IntegrationFramework.Factories.Database;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace MAD.IntegrationFramework.Logging

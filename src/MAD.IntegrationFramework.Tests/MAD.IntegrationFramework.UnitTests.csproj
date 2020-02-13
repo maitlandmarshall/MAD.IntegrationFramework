@@ -14,7 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\MaitlandsInterfaceFramework\MaitlandsInterfaceFramework.csproj" />
+    <ProjectReference Include="..\MAD.IntegrationFramework\MAD.IntegrationFramework.csproj" />
   </ItemGroup>
 
   <ItemGroup>

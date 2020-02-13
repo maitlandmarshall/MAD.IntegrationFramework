@@ -1,25 +1,19 @@
-﻿using MAD.IntegrationFramework.Database;
-using MAD.IntegrationFramework.Services.Database;
-using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace MAD.IntegrationFramework.Database
+﻿namespace MAD.IntegrationFramework.Database
 {
     internal class MIFDbContextFactory<DbContext> : IMIFDbContextFactory<DbContext> where DbContext : MIFDbContext, new()
     {
-        private AutomaticMigrationService AutomaticMigrationService;
+        private AutomaticMigrationService automaticMigrationService;
 
         public MIFDbContextFactory(AutomaticMigrationService automaticMigrationService)
         {
-            this.AutomaticMigrationService = automaticMigrationService;
+            this.automaticMigrationService = automaticMigrationService;
         }
 
         public DbContext Create()
         {
             DbContext dbContext = new DbContext();
 
-            this.AutomaticMigrationService.EnsureDatabaseUpToDate(dbContext);
+            this.automaticMigrationService.EnsureDatabaseUpToDate(dbContext);
 
             return dbContext;
         }

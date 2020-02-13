@@ -8,13 +8,13 @@ using System.Reflection;
 
 namespace MAD.IntegrationFramework.Configuration
 {
-    internal class MIFConfigFactory
+    internal class DefaultMIFConfigFactory : IMIFConfigFactory
     {
         private const string SettingsFileName = "settings.json";
 
         private readonly IRelativeFilePathResolver relativeFilePathResolver;
 
-        public MIFConfigFactory(IRelativeFilePathResolver relativeFilePathResolver)
+        public DefaultMIFConfigFactory(IRelativeFilePathResolver relativeFilePathResolver)
         {
             this.relativeFilePathResolver = relativeFilePathResolver;
         }

@@ -16,7 +16,7 @@ namespace MAD.IntegrationFramework.Integrations
 
         public string ResolvePath(TimedIntegration timedIntegration)
         {
-            return this.relativeFilePathResolver.GetRelativeFilePath($"{timedIntegration.GetType().Name}.json"));
+            return this.relativeFilePathResolver.GetRelativeFilePath($"{timedIntegration.GetType().Name}.json");
         }
     }
 }

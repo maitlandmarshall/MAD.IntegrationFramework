@@ -37,6 +37,8 @@ namespace MAD.IntegrationFramework
                 .AddTransient<FrameworkConfigurationService>()
                 .AddTransient(typeof(IMIFDbContextFactory<>), typeof(MIFDbContextFactory<>))
 
+                .AddTransient<IMIFConfigFactory, DefaultMIFConfigFactory>()
+
                 .AddTransient<IRelativeFilePathResolver, DefaultRelativeFilePathResolver>()
                 .AddTransient<IIntegrationPathResolver, DefaultIntegrationFilePathResolver>();
 

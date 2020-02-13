@@ -53,7 +53,7 @@ namespace MAD.IntegrationFramework.Configuration
 
         private static Type GetMifsConfigConfigurationType()
         {
-            Type typeWhichInheritsFromMIFConfig = Assembly.GetEntryAssembly().GetTypes().FirstOrDefault(y => typeof(MIFConfig).IsAssignableFrom(y));
+            Type typeWhichInheritsFromMIFConfig = Assembly.GetEntryAssembly().GetTypes().FirstOrDefault(y => !y.IsAbstract && typeof(MIFConfig).IsAssignableFrom(y));
 
             if (typeWhichInheritsFromMIFConfig == null)
                 typeWhichInheritsFromMIFConfig = typeof(MIFConfig);

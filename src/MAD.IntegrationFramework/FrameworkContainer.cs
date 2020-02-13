@@ -1,4 +1,5 @@
-﻿using MAD.IntegrationFramework.Http;
+﻿using MAD.IntegrationFramework.Configuration;
+using MAD.IntegrationFramework.Http;
 using MAD.IntegrationFramework.Integrations;
 using MAD.IntegrationFramework.Logging;
 using Microsoft.AspNetCore.Hosting;
@@ -53,18 +54,21 @@ namespace MAD.IntegrationFramework
         private readonly ILogger logger;
         private readonly IExceptionLogger exceptionLogger;
         private readonly IWebHostFactory webHostFactory;
+        private readonly IMIFConfigFactory mifConfigFactory;
 
         private IWebHost webHost;
 
         public FrameworkContainer(ILogger<FrameworkContainer> logger,
                                   IExceptionLogger exceptionLogger,
                                   TimedIntegrationController timedInterfaceService,
-                                  IWebHostFactory webHostFactory)
+                                  IWebHostFactory webHostFactory,
+                                  IMIFConfigFactory mifConfigFactory)
         {
             this.logger = logger;
             this.exceptionLogger = exceptionLogger;
             this.timedInterfaceService = timedInterfaceService;
             this.webHostFactory = webHostFactory;
+            this.mifConfigFactory = mifConfigFactory;
 
             this.serviceCancellationToken = new CancellationTokenSource();
         }
@@ -75,7 +79,7 @@ namespace MAD.IntegrationFramework
 
             try
             {
-                MIFConfig config = ConfigurationService.LoadConfiguration();
+                MIFConfig config = this.mifConfigFactory.Load();
 
                 this.logger.LogInformation($"Binding Port: {config.BindingPort}");
                 this.logger.LogInformation($"Binding Path: {config.BindingPath}");
