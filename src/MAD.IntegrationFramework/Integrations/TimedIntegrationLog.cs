@@ -5,10 +5,10 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Text;
 
-namespace MAD.IntegrationFramework.Services.Internals
+namespace MAD.IntegrationFramework.Integrations
 {
     [MIFTable]
-    internal class TimedInterfaceLog
+    internal class TimedIntegrationLog
     {
         [Key]
         public int Id { get; set; }
@@ -26,10 +26,5 @@ namespace MAD.IntegrationFramework.Services.Internals
 
         [Required]
         public string MachineName { get; set; }
-    }
-
-    internal class TimedInterfaceDbContext : MIFDbContext
-    {
-        public DbSet<TimedInterfaceLog> TimedInterfaceLogs { get; set; }
     }
 }

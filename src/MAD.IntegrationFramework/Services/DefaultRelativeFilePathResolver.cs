@@ -10,7 +10,7 @@ namespace MAD.IntegrationFramework.Services
     {
         private string RootDirectory => Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
 
-        public string GetRelativeFilePath (string filePath)
+        public string ResolvePath (string filePath)
         {
             return Path.Combine(this.RootDirectory, filePath);
         }

@@ -6,6 +6,6 @@ namespace MAD.IntegrationFramework.Configuration
 {
     internal interface IMIFConfigFactory
     {
-        MIFConfig Load();
+        MIFConfig Create();
     }
 }

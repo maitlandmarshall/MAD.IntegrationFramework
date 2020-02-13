@@ -24,7 +24,7 @@ namespace MAD.IntegrationFramework.Configuration
         public MIFConfig LoadConfiguration()
         {
             Type typeWhichInheritsFromMIFConfig = GetMifsConfigConfigurationType();
-            string settingsFilePath = this.relativeFilePathResolver.GetRelativeFilePath(SettingsRelativePath);
+            string settingsFilePath = this.relativeFilePathResolver.ResolvePath(SettingsRelativePath);
 
             if (!File.Exists(settingsFilePath))
             {

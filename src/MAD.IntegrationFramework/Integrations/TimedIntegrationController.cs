@@ -1,5 +1,6 @@
 ﻿using MAD.IntegrationFramework.Core;
 using MAD.IntegrationFramework.Logging;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -16,40 +17,30 @@ namespace MAD.IntegrationFramework.Integrations
 
         private readonly ILogger<TimedIntegrationController> logger;
         private readonly IExceptionLogger exceptionLogger;
-        private readonly IntegrationConfigurationService integrationConfigurationService;
-
+        private readonly IServiceScopeFactory serviceScopeFactory;
+        private readonly ITimedIntegrationFactory timedIntegrationFactory;
+        private readonly ITimedIntegrationTypesResolver timedIntegrationTypesResolver;
         private List<TimedIntegrationTimer> timedIntegrationTimers;
 
         public TimedIntegrationController(ILogger<TimedIntegrationController> logger,
                                           IExceptionLogger exceptionLogger,
-                                          IntegrationConfigurationService integrationConfigurationService)
+                                          IServiceScopeFactory serviceScopeFactory,
+                                          ITimedIntegrationFactory timedIntegrationFactory,
+                                          ITimedIntegrationTypesResolver timedIntegrationTypesResolver
+                                          )
         {
             this.logger = logger;
             this.exceptionLogger = exceptionLogger;
-            this.integrationConfigurationService = integrationConfigurationService;
-
+            this.serviceScopeFactory = serviceScopeFactory;
+            this.timedIntegrationFactory = timedIntegrationFactory;
+            this.timedIntegrationTypesResolver = timedIntegrationTypesResolver;
             this.timedIntegrationTimers = new List<TimedIntegrationTimer>();
         }
 
-        private IEnumerable<Type> GetTimedIntegrationTypesInAssembly(Assembly assembly)
-        {
-            // Look through the assembly and yield all the classes which inherit from TimedIntegration
-            foreach (Type timedInterfaceType in assembly.GetTypes().Where(y => typeof(TimedIntegration).IsAssignableFrom(y) && !y.IsAbstract))
-            {
-                yield return timedInterfaceType;
-            }
-        }
-
-        internal async Task StartAsync()
-        {
-            IEnumerable<Type> timedIntegrationTypesInEntryAssembly = this.GetTimedIntegrationTypesInAssembly(Assembly.GetEntryAssembly());
-            await this.StartAsync(timedIntegrationTypesInEntryAssembly);
-        }
-
-        internal async Task StartAsync (IEnumerable<Type> integrationTypes)
+        public void Start (IEnumerable<Type> integrationTypes)
         {
             // Create a timer for each interface
-            foreach (Type timedIntegrationType in timedIntegrationTypesInEntryAssembly)
+            foreach (Type timedIntegrationType in integrationTypes)
             {
                 TimedIntegrationTimer timedIntegrationTimer = new TimedIntegrationTimer(timedIntegrationType);
                 timedIntegrationTimer.Elapsed += this.TimedIntegrationTimer_Elapsed;
@@ -59,13 +50,6 @@ namespace MAD.IntegrationFramework.Integrations
 
             foreach (TimedIntegrationTimer timedInterfaceTimer in this.timedIntegrationTimers)
             {
-#if DEBUG
-                await this.HandleRunAfterAttributeForTimedInterface(timedInterfaceTimer.TimedIntegrationType);
-
-                // Execute the interface initially, otherwise will have to wait for the first timer to elapse before anything happens.
-                await this.ExecuteInterface(timedInterfaceTimer.TimedIntegrationType);
-#endif
-
                 timedInterfaceTimer.Start();
             }
         }
@@ -77,18 +61,27 @@ namespace MAD.IntegrationFramework.Integrations
 
             try
             {
-                await this.HandleRunAfterAttributeForTimedInterface(serviceTimer.TimedIntegrationType);
-                await this.ExecuteInterface(serviceTimer.TimedIntegrationType);
+                using (IServiceScope scope = this.serviceScopeFactory.CreateScope())
+                {
+                    // Wait for another TimedIntegration to complete if this TimedIntegration has the [RunAfter] attribute.
+                    await scope.ServiceProvider
+                        .GetRequiredService<TimedIntegrationRunAfterAttributeHandler>()
+                        .WaitForOthers(serviceTimer, this.timedIntegrationTimers);
 
-                if (serviceTimer.Interval != serviceTimer.TimedIntegrationType.Interval.TotalMilliseconds)
-                    serviceTimer.Interval = serviceTimer.TimedIntegrationType.Interval.TotalMilliseconds;
+                    TimedIntegration timedIntegration = scope.ServiceProvider.GetRequiredService(serviceTimer.TimedIntegrationType) as TimedIntegration;
+                    TimedIntegrationExecutionHandler timedIntegrationExecuteHandler = scope.ServiceProvider.GetRequiredService<TimedIntegrationExecutionHandler>();
+
+                    await timedIntegrationExecuteHandler.Execute(timedIntegration);
+                }
             }
             catch (Exception ex)
             {
                 this.logger.LogError(ex, ex.Message);
                 await this.exceptionLogger.LogException(ex, serviceTimer.TimedIntegrationType.GetType().Name);
 
-                serviceTimer.Interval = TimeSpan.FromHours(6).TotalMilliseconds;
+                // Wait for 6 hours before starting the timer again to prevent error spam
+                // TODO: Think of a better way to do this
+                await Task.Delay(TimeSpan.FromHours(6));
             }
             finally
             {
@@ -96,123 +89,15 @@ namespace MAD.IntegrationFramework.Integrations
             }
         }
 
-        private async Task HandleRunAfterAttributeForTimedIntegration(Type timedIntegrationType)
+        internal void Stop()
         {
-            RunAfterAttribute runAfterAttribute = timedIntegrationType.GetCustomAttribute<RunAfterAttribute>();
-
-            if (runAfterAttribute == null)
-                throw new MissingAttributeException(typeof(RunAfterAttribute));
-
-            Type integrationTypeToRunAfter = this.timedIntegrationTimers.FirstOrDefault(y => y.TimedIntegrationType == runAfterAttribute.IntegrationTypeToRunAfter).TimedIntegrationType;
-
-            if (integrationTypeToRunAfter == null)
-                throw new Exception($"{timedIntegrationType.GetType().Name} cannot run after {runAfterAttribute.IntegrationTypeToRunAfter.Name} as it can't be found");
-
-            // If the interface to run after hasn't completed a first run, or it has started again but hasn't finished
-            if (!integrationTypeToRunAfter.LastFinish.HasValue || integrationTypeToRunAfter.LastStart > integrationTypeToRunAfter.LastFinish)
+            foreach (TimedIntegrationTimer timedIntegrationTimers in this.timedIntegrationTimers)
             {
-                TaskCompletionSource<bool> waitForFinishTaskCompletionSource = new TaskCompletionSource<bool>();
-                interfaceToRunAfterTimer.PropertyChanged += InterfaceToRunAfterTimer_PropertyChanged;
-
-                void InterfaceToRunAfterTimer_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
-                {
-                    // When the LastFinish property is updated, set the CompletionSource result so program flow may continue;
-                    if (e.PropertyName == nameof(interfaceToRunAfterTimer.LastFinish))
-                    {
-                        interfaceToRunAfterTimer.PropertyChanged -= InterfaceToRunAfterTimer_PropertyChanged;
-                        waitForFinishTaskCompletionSource.SetResult(true);
-                    }
-
-                }
-
-                // Block the flow of the function until the LastFinish property has been updated
-                await waitForFinishTaskCompletionSource.Task;
-            }
-        }
-
-        private async Task ExecuteInterface(TimedIntegration timedInterface)
-        {
-            TimedInterfaceDbContext db = null;
-            TimedInterfaceLog log = null;
-
-            if (String.IsNullOrEmpty(MIF.Config.SqlConnectionString))
-                return;
-
-            IScheduledIntegration scheduledInterface = timedInterface as IScheduledIntegration;
-
-            try
-            {
-                timedInterface.Timer.LastStart = DateTime.Now;
-
-                // Load the configuration data associated with the TimedInterface before each execution
-                ConfigurationService.LoadConfiguration(timedInterface);
-
-                // Every time this interface is executed, check if it's enabled.
-                if (!timedInterface.IsEnabled)
-                    return;
-
-                if (scheduledInterface != null && scheduledInterface.LastRunDateTime.HasValue)
-                {
-                    DateTime now = DateTime.Now;
-
-                    if (now < scheduledInterface.NextRunDateTime)
-                        return;
-                }
-
-                // If there is a connection to a datbase, create a log detailing the Start / End date and times the interface ran
-                if (!String.IsNullOrEmpty(MIF.Config.SqlConnectionString))
-                {
-                    lock (this.syncToken)
-                    {
-                        db = new TimedInterfaceDbContext();
-                        log = new TimedInterfaceLog
-                        {
-                            InterfaceName = timedInterface.GetType().Name,
-                            StartDateTime = DateTime.Now,
-                            ExecutablePath = Process.GetCurrentProcess().MainModule.FileName,
-                            MachineName = Environment.MachineName
-                        };
-
-                        db.TimedInterfaceLogs.Add(log);
-                    }
-
-                    await db.SaveChangesAsync();
-                }
-
-                DateTime lastRun = DateTime.Now;
-
-                await timedInterface.Execute();
-
-                if (scheduledInterface != null)
-                    scheduledInterface.LastRunDateTime = lastRun;
-            }
-            finally
-            {
-
-                // Save the configuration data after each execution of the TimedInterface
-                ConfigurationService.SaveConfiguration(timedInterface);
-
-                if (db != null)
-                {
-                    log.EndDateTime = DateTime.Now;
-
-                    await db.SaveChangesAsync();
-                    await db.DisposeAsync();
-                }
-
-                timedInterface.Timer.LastFinish = DateTime.Now;
-            }
-        }
-
-        internal void StopInterfaces()
-        {
-            foreach (TimedIntegration timedInterface in this.TimedInterfaces)
-            {
-                timedInterface.Timer.Stop();
-                timedInterface.Timer.Dispose();
+                timedIntegrationTimers.Stop();
+                timedIntegrationTimers.Dispose();
             }
 
-            this.TimedInterfaces.Clear();
+            this.timedIntegrationTimers.Clear();
         }
     }
 }

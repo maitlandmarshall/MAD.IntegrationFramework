@@ -12,19 +12,19 @@ namespace MAD.IntegrationFramework.Database
 {
     internal class AutomaticMigrationService
     {
-        private readonly ILogger Logger;
-        private readonly SqlStatementBuilder SqlBuilder;
+        private readonly ILogger logger;
+        private readonly SqlStatementBuilder sqlBuilder;
 
-        private readonly List<Type> MigratedContexts;
-        private readonly object SyncToken;
+        private readonly List<Type> migratedContexts;
+        private readonly object syncToken;
 
         public AutomaticMigrationService(ILogger<AutomaticMigrationService> logger, SqlStatementBuilder sqlBuilder)
         {
-            this.Logger = logger;
-            this.SqlBuilder = sqlBuilder;
+            this.logger = logger;
+            this.sqlBuilder = sqlBuilder;
 
-            this.MigratedContexts = new List<Type>();
-            this.SyncToken = new object();
+            this.migratedContexts = new List<Type>();
+            this.syncToken = new object();
         }
         
         /// <summary>
@@ -32,9 +32,9 @@ namespace MAD.IntegrationFramework.Database
         /// </summary>
         public void EnsureDatabaseUpToDate(MIFDbContext dbContext)
         {
-            lock (this.SyncToken)
+            lock (this.syncToken)
             {
-                if (this.MigratedContexts.Contains(dbContext.GetType()))
+                if (this.migratedContexts.Contains(dbContext.GetType()))
                     return;
 
                 try
@@ -63,9 +63,9 @@ namespace MAD.IntegrationFramework.Database
                         if (tableExists)
                             continue;
 
-                        this.Logger.LogInformation($"Creating {tableName} table");
+                        this.logger.LogInformation($"Creating {tableName} table");
 
-                        string createTableQuery = this.SqlBuilder.BuildCreateTableSqlStatementForIEntityType(entityType);
+                        string createTableQuery = this.sqlBuilder.BuildCreateTableSqlStatementForIEntityType(entityType);
 
                         // Execute the CREATE Table statement
                         dbContext.Connection.Execute(createTableQuery);
@@ -73,7 +73,7 @@ namespace MAD.IntegrationFramework.Database
                 }
                 finally
                 {
-                    this.MigratedContexts.Add(dbContext.GetType());
+                    this.migratedContexts.Add(dbContext.GetType());
                 }
             }
         }

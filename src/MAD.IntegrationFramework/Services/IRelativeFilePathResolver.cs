@@ -6,6 +6,6 @@ namespace MAD.IntegrationFramework.Services
 {
     internal interface IRelativeFilePathResolver
     {
-        string GetRelativeFilePath(string filePath);
+        string ResolvePath(string relativeFilePath);
     }
 }

@@ -4,9 +4,8 @@ using System.Text;
 
 namespace MAD.IntegrationFramework.Integrations
 {
-    internal interface IIntegrationPathResolver
+    internal interface ITimedIntegrationFactory
     {
-        string ResolvePath(TimedIntegration timedIntegration);
+        TimedIntegration Create(Type timedIntegrationType);
     }
 }
- 

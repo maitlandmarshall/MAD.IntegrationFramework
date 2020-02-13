@@ -7,6 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -48,28 +49,30 @@ namespace MAD.IntegrationFramework
 
         #endregion
 
-        private readonly TimedIntegrationController timedInterfaceService;
         private readonly CancellationTokenSource serviceCancellationToken;
 
         private readonly ILogger logger;
         private readonly IExceptionLogger exceptionLogger;
         private readonly IWebHostFactory webHostFactory;
         private readonly IMIFConfigFactory mifConfigFactory;
+        private readonly IServiceScopeFactory serviceScopeFactory;
+        private readonly ITimedIntegrationTypesResolver timedIntegrationTypesResolver;
 
         private IWebHost webHost;
 
         public FrameworkContainer(ILogger<FrameworkContainer> logger,
                                   IExceptionLogger exceptionLogger,
-                                  TimedIntegrationController timedInterfaceService,
                                   IWebHostFactory webHostFactory,
-                                  IMIFConfigFactory mifConfigFactory)
+                                  IMIFConfigFactory mifConfigFactory,
+                                  IServiceScopeFactory serviceScopeFactory,
+                                  ITimedIntegrationTypesResolver timedIntegrationTypesResolver)
         {
             this.logger = logger;
             this.exceptionLogger = exceptionLogger;
-            this.timedInterfaceService = timedInterfaceService;
             this.webHostFactory = webHostFactory;
             this.mifConfigFactory = mifConfigFactory;
-
+            this.serviceScopeFactory = serviceScopeFactory;
+            this.timedIntegrationTypesResolver = timedIntegrationTypesResolver;
             this.serviceCancellationToken = new CancellationTokenSource();
         }
 
@@ -79,23 +82,14 @@ namespace MAD.IntegrationFramework
 
             try
             {
-                MIFConfig config = this.mifConfigFactory.Load();
+                MIFConfig config = this.mifConfigFactory.Create();
 
                 this.logger.LogInformation($"Binding Port: {config.BindingPort}");
                 this.logger.LogInformation($"Binding Path: {config.BindingPath}");
 
                 if (!HaveVisibleConsole())
                 {
-                    this.logger.LogInformation("Running as service");
-
-                    _ = Host.CreateDefaultBuilder()
-                            .UseWindowsService()
-                            .ConfigureServices((hostContext, services) =>
-                            {
-                                services.AddHostedService<MIFWindowsService>();
-                            })
-                            .Build()
-                            .RunAsync(this.serviceCancellationToken.Token);
+                    this.MountWindowsService();
                 }
                 else
                 {
@@ -108,14 +102,21 @@ namespace MAD.IntegrationFramework
                 await this.webHost.StartAsync(this.serviceCancellationToken.Token);
 
                 this.logger.LogInformation("Http Server started");
-                this.logger.LogInformation("Starting Timed Interface Service");
+                this.logger.LogInformation("Starting Timed Integration Service");
 
-                this.timedInterfaceService.LoadInterfaces();
-                this.timedInterfaceService.StartAsync();
+                using (IServiceScope scope = this.serviceScopeFactory.CreateScope())
+                {
+                    TimedIntegrationController timedIntegrationController = scope.ServiceProvider.GetRequiredService<TimedIntegrationController>();
 
-                this.logger.LogInformation("Timed Tnterface Service started");
+                    IEnumerable<Type> timedIntegrationTypes = this.timedIntegrationTypesResolver.ResolveTypes();
+                    timedIntegrationController.Start(timedIntegrationTypes);
 
-                await Task.Delay(TimeSpan.FromMilliseconds(-1), this.serviceCancellationToken.Token);
+                    this.logger.LogInformation("Timed Integration Service started");
+
+                    await Task.Delay(TimeSpan.FromMilliseconds(-1), this.serviceCancellationToken.Token);
+
+                    this.logger.LogInformation("Timed Integration Service stopped");
+                }
             }
             catch (Exception ex)
             {
@@ -126,11 +127,24 @@ namespace MAD.IntegrationFramework
             }
         }
 
+        private void MountWindowsService()
+        {
+            this.logger.LogInformation("Running as service");
+
+            _ = Host.CreateDefaultBuilder()
+                    .UseWindowsService()
+                    .ConfigureServices((hostContext, services) =>
+                    {
+                        services.AddHostedService<MIFWindowsService>();
+                    })
+                    .Build()
+                    .RunAsync(this.serviceCancellationToken.Token);
+        }
+
         public async Task Stop()
         {
             try
             {
-                this.timedInterfaceService.StopInterfaces();
                 await this.webHost.StopAsync(TimeSpan.FromSeconds(60));
             }
             finally

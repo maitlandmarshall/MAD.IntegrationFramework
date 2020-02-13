@@ -9,25 +9,30 @@ using System.Text;
 
 namespace MAD.IntegrationFramework.Integrations
 {
-    internal sealed class IntegrationConfigurationService
+    internal sealed class FileSystemTimedIntegrationMetaDataService : ITimedIntegrationMetaDataService
     {
         private static object syncToken = new object();
 
-        private IIntegrationPathResolver integrationPathResolver;
+        private IRelativeFilePathResolver relativeFilePathResolver;
 
-        public IntegrationConfigurationService(IIntegrationPathResolver integrationPathResolver)
+        public FileSystemTimedIntegrationMetaDataService(IRelativeFilePathResolver integrationPathResolver)
         {
-            this.integrationPathResolver = integrationPathResolver;
+            this.relativeFilePathResolver = integrationPathResolver;
         }
 
-        public void LoadConfiguration(TimedIntegration timedIntegration)
+        private string FilePathForTimedIntegration(TimedIntegration timedIntegration)
+        {
+            return this.relativeFilePathResolver.ResolvePath($"{timedIntegration.GetType().Name}.json");
+        }
+
+        public void Load(TimedIntegration timedIntegration)
         {
             IEnumerable<MemberInfo> savableMembers = GetSavableMembers(timedIntegration);
 
             if (!savableMembers.Any())
                 return;
 
-            string timedInterfaceSettingsFilePath = this.integrationPathResolver.ResolvePath(timedIntegration);
+            string timedInterfaceSettingsFilePath = this.FilePathForTimedIntegration(timedIntegration);
 
             if (!File.Exists(timedInterfaceSettingsFilePath))
                 return;
@@ -58,7 +63,7 @@ namespace MAD.IntegrationFramework.Integrations
             }
         }
 
-        public void SaveConfiguration(TimedIntegration timedInterface)
+        public void Save(TimedIntegration timedInterface)
         {
             lock (syncToken)
             {
@@ -93,7 +98,7 @@ namespace MAD.IntegrationFramework.Integrations
 
                 string timedInterfaceSettingsData = JsonConvert.SerializeObject(propertiesToSave);
 
-                File.WriteAllText(this.integrationPathResolver.ResolvePath(timedInterface), timedInterfaceSettingsData);
+                File.WriteAllText(this.FilePathForTimedIntegration(timedInterface), timedInterfaceSettingsData);
             }
         }
 

@@ -7,6 +7,8 @@ using MAD.IntegrationFramework.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 
@@ -28,19 +30,26 @@ namespace MAD.IntegrationFramework
                 })
                 .AddSingleton<FrameworkContainer>()
                 .AddSingleton<AutomaticMigrationService>()
-                .AddSingleton<TimedIntegrationController>()
                 .AddSingleton<IWebHostFactory, DefaultWebHostFactory>()
                 .AddTransient<ExceptionDbLogger>()
                 .AddTransient<SqlStatementBuilder>()
                 .AddTransient<EmbeddedResourceService>()
-                .AddTransient<IntegrationConfigurationService>()
+                .AddTransient<FileSystemTimedIntegrationMetaDataService>()
                 .AddTransient<FrameworkConfigurationService>()
                 .AddTransient(typeof(IMIFDbContextFactory<>), typeof(MIFDbContextFactory<>))
-
                 .AddTransient<IMIFConfigFactory, DefaultMIFConfigFactory>()
-
                 .AddTransient<IRelativeFilePathResolver, DefaultRelativeFilePathResolver>()
-                .AddTransient<IIntegrationPathResolver, DefaultIntegrationFilePathResolver>();
+                .AddTransient<ITimedIntegrationFactory, MetaDataTimedIntegrationFactory>()
+
+                .AddScoped<TimedIntegrationController>()
+                .AddScoped<TimedIntegrationRunAfterAttributeHandler>();
+
+            IEnumerable<Type> timedIntegrationTypes = new EntryAssemblyTimedIntegrationTypesResolver().ResolveTypes();
+
+            foreach (Type t in timedIntegrationTypes)
+            {
+                serviceCollection.AddScoped(t, provider => provider.GetRequiredService<ITimedIntegrationFactory>().Create(t));
+            }
 
             ServiceProvider = serviceCollection.BuildServiceProvider();
         }
@@ -49,12 +58,12 @@ namespace MAD.IntegrationFramework
         {
             ConfigureServices();
 
-            return ServiceProvider.GetService<FrameworkContainer>().Start();
+            return ServiceProvider.GetRequiredService<FrameworkContainer>().Start();
         }
 
         public static Task Stop()
         {
-            return ServiceProvider.GetService<FrameworkContainer>().Stop();
+            return ServiceProvider.GetRequiredService<FrameworkContainer>().Stop();
         }
     }
 }
