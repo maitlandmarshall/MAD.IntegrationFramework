@@ -1,4 +1,5 @@
-﻿using MAD.IntegrationFramework.Core;
+﻿using Autofac;
+using MAD.IntegrationFramework.Core;
 using MAD.IntegrationFramework.Logging;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -17,28 +18,37 @@ namespace MAD.IntegrationFramework.Integrations
 
         private readonly ILogger<TimedIntegrationController> logger;
         private readonly IExceptionLogger exceptionLogger;
-        private readonly IServiceScopeFactory serviceScopeFactory;
-        private readonly ITimedIntegrationFactory timedIntegrationFactory;
         private readonly ITimedIntegrationTypesResolver timedIntegrationTypesResolver;
+        private readonly ILifetimeScope lifetimeScope;
+        private readonly TimedIntegrationRunAfterAttributeHandler timedIntegrationRunAfterAttributeHandler;
+        private readonly ITimedIntegrationMetaDataService timedIntegrationMetaDataService;
+        private readonly TimedIntegrationExecutionHandler timedIntegrationExecutionHandler;
         private List<TimedIntegrationTimer> timedIntegrationTimers;
 
         public TimedIntegrationController(ILogger<TimedIntegrationController> logger,
                                           IExceptionLogger exceptionLogger,
-                                          IServiceScopeFactory serviceScopeFactory,
-                                          ITimedIntegrationFactory timedIntegrationFactory,
-                                          ITimedIntegrationTypesResolver timedIntegrationTypesResolver
+                                          ITimedIntegrationTypesResolver timedIntegrationTypesResolver,
+                                          ILifetimeScope lifetimeScope,
+                                          TimedIntegrationRunAfterAttributeHandler timedIntegrationRunAfterAttributeHandler,
+                                          ITimedIntegrationMetaDataService timedIntegrationMetaDataService,
+                                          TimedIntegrationExecutionHandler timedIntegrationExecutionHandler
                                           )
         {
             this.logger = logger;
             this.exceptionLogger = exceptionLogger;
-            this.serviceScopeFactory = serviceScopeFactory;
-            this.timedIntegrationFactory = timedIntegrationFactory;
             this.timedIntegrationTypesResolver = timedIntegrationTypesResolver;
+            this.lifetimeScope = lifetimeScope;
+            this.timedIntegrationRunAfterAttributeHandler = timedIntegrationRunAfterAttributeHandler;
+            this.timedIntegrationMetaDataService = timedIntegrationMetaDataService;
+            this.timedIntegrationExecutionHandler = timedIntegrationExecutionHandler;
+
             this.timedIntegrationTimers = new List<TimedIntegrationTimer>();
         }
 
-        public void Start (IEnumerable<Type> integrationTypes)
+        public void Start ()
         {
+            IEnumerable<Type> integrationTypes = this.timedIntegrationTypesResolver.ResolveTypes();
+
             // Create a timer for each interface
             foreach (Type timedIntegrationType in integrationTypes)
             {
@@ -61,17 +71,15 @@ namespace MAD.IntegrationFramework.Integrations
 
             try
             {
-                using (IServiceScope scope = this.serviceScopeFactory.CreateScope())
+                using (ILifetimeScope scope = this.lifetimeScope.BeginLifetimeScope(y => y.RegisterType(serviceTimer.TimedIntegrationType).InstancePerLifetimeScope().AsSelf()))
                 {
                     // Wait for another TimedIntegration to complete if this TimedIntegration has the [RunAfter] attribute.
-                    await scope.ServiceProvider
-                        .GetRequiredService<TimedIntegrationRunAfterAttributeHandler>()
-                        .WaitForOthers(serviceTimer, this.timedIntegrationTimers);
+                    await this.timedIntegrationRunAfterAttributeHandler.WaitForOthers(serviceTimer, this.timedIntegrationTimers);
 
-                    TimedIntegration timedIntegration = scope.ServiceProvider.GetRequiredService(serviceTimer.TimedIntegrationType) as TimedIntegration;
-                    TimedIntegrationExecutionHandler timedIntegrationExecuteHandler = scope.ServiceProvider.GetRequiredService<TimedIntegrationExecutionHandler>();
+                    TimedIntegration timedIntegration = scope.Resolve(serviceTimer.TimedIntegrationType) as TimedIntegration;
+                    this.timedIntegrationMetaDataService.Load(timedIntegration);
 
-                    await timedIntegrationExecuteHandler.Execute(timedIntegration);
+                    await this.timedIntegrationExecutionHandler.Execute(timedIntegration);
                 }
             }
             catch (Exception ex)

@@ -55,24 +55,20 @@ namespace MAD.IntegrationFramework
         private readonly IExceptionLogger exceptionLogger;
         private readonly IWebHostFactory webHostFactory;
         private readonly IMIFConfigFactory mifConfigFactory;
-        private readonly IServiceScopeFactory serviceScopeFactory;
-        private readonly ITimedIntegrationTypesResolver timedIntegrationTypesResolver;
-
+        private readonly TimedIntegrationController timedIntegrationController;
         private IWebHost webHost;
 
         public FrameworkContainer(ILogger<FrameworkContainer> logger,
                                   IExceptionLogger exceptionLogger,
                                   IWebHostFactory webHostFactory,
                                   IMIFConfigFactory mifConfigFactory,
-                                  IServiceScopeFactory serviceScopeFactory,
-                                  ITimedIntegrationTypesResolver timedIntegrationTypesResolver)
+                                  TimedIntegrationController timedIntegrationController)
         {
             this.logger = logger;
             this.exceptionLogger = exceptionLogger;
             this.webHostFactory = webHostFactory;
             this.mifConfigFactory = mifConfigFactory;
-            this.serviceScopeFactory = serviceScopeFactory;
-            this.timedIntegrationTypesResolver = timedIntegrationTypesResolver;
+            this.timedIntegrationController = timedIntegrationController;
             this.serviceCancellationToken = new CancellationTokenSource();
         }
 
@@ -104,19 +100,11 @@ namespace MAD.IntegrationFramework
                 this.logger.LogInformation("Http Server started");
                 this.logger.LogInformation("Starting Timed Integration Service");
 
-                using (IServiceScope scope = this.serviceScopeFactory.CreateScope())
-                {
-                    TimedIntegrationController timedIntegrationController = scope.ServiceProvider.GetRequiredService<TimedIntegrationController>();
+                timedIntegrationController.Start();
 
-                    IEnumerable<Type> timedIntegrationTypes = this.timedIntegrationTypesResolver.ResolveTypes();
-                    timedIntegrationController.Start(timedIntegrationTypes);
+                this.logger.LogInformation("Timed Integration Service started");
 
-                    this.logger.LogInformation("Timed Integration Service started");
-
-                    await Task.Delay(TimeSpan.FromMilliseconds(-1), this.serviceCancellationToken.Token);
-
-                    this.logger.LogInformation("Timed Integration Service stopped");
-                }
+                await Task.Delay(TimeSpan.FromMilliseconds(-1), this.serviceCancellationToken.Token);
             }
             catch (Exception ex)
             {

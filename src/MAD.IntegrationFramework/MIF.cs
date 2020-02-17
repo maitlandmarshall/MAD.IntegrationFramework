@@ -1,4 +1,6 @@
-﻿using MAD.IntegrationFramework.Configuration;
+﻿using Autofac;
+using Autofac.Extensions.DependencyInjection;
+using MAD.IntegrationFramework.Configuration;
 using MAD.IntegrationFramework.Database;
 using MAD.IntegrationFramework.Http;
 using MAD.IntegrationFramework.Integrations;
@@ -19,51 +21,92 @@ namespace MAD.IntegrationFramework
 
     public static class MIF
     {
-        internal static IServiceProvider ServiceProvider { get; private set; }
+        internal static IContainer RootDependencyInjectionContainer { get; private set; }
+        private static ILifetimeScope rootScope;
 
         private static void ConfigureServices()
         {
-            IServiceCollection serviceCollection = new ServiceCollection()
-                .AddLogging(logging =>
-                {
-                    logging.Services.AddTransient(typeof(ILogger<>), typeof(Logger<>));
-                })
-                .AddSingleton<FrameworkContainer>()
-                .AddSingleton<AutomaticMigrationService>()
-                .AddSingleton<IWebHostFactory, DefaultWebHostFactory>()
-                .AddTransient<ExceptionDbLogger>()
-                .AddTransient<SqlStatementBuilder>()
-                .AddTransient<EmbeddedResourceService>()
-                .AddTransient<FileSystemTimedIntegrationMetaDataService>()
-                .AddTransient<FrameworkConfigurationService>()
-                .AddTransient(typeof(IMIFDbContextFactory<>), typeof(MIFDbContextFactory<>))
-                .AddTransient<IMIFConfigFactory, DefaultMIFConfigFactory>()
-                .AddTransient<IRelativeFilePathResolver, DefaultRelativeFilePathResolver>()
-                .AddTransient<ITimedIntegrationFactory, MetaDataTimedIntegrationFactory>()
+            ContainerBuilder builder = new ContainerBuilder();
+            builder
+                .RegisterType(typeof(Logger<>))
+                .As(typeof(ILogger<>));
 
-                .AddScoped<TimedIntegrationController>()
-                .AddScoped<TimedIntegrationRunAfterAttributeHandler>();
+            builder
+                .RegisterType<FrameworkContainer>()
+                .AsSelf()
+                .InstancePerLifetimeScope();
 
-            IEnumerable<Type> timedIntegrationTypes = new EntryAssemblyTimedIntegrationTypesResolver().ResolveTypes();
+            builder
+                .RegisterType<AutomaticMigrationService>()
+                .AsSelf()
+                .InstancePerLifetimeScope();
 
-            foreach (Type t in timedIntegrationTypes)
-            {
-                serviceCollection.AddScoped(t, provider => provider.GetRequiredService<ITimedIntegrationFactory>().Create(t));
-            }
+            builder
+                .RegisterType<DefaultWebHostFactory>()
+                .As<IWebHostFactory>()
+                .InstancePerLifetimeScope();
 
-            ServiceProvider = serviceCollection.BuildServiceProvider();
+            builder
+                .RegisterType<ExceptionDbLogger>()
+                .AsSelf();
+
+            builder
+                .RegisterType<SqlStatementBuilder>()
+                .AsSelf();
+
+            builder
+                .RegisterType<EmbeddedResourceService>()
+                .AsSelf();
+
+            builder
+                .RegisterType<FileSystemTimedIntegrationMetaDataService>()
+                .AsSelf();
+
+            builder
+                .RegisterType<FrameworkConfigurationService>()
+                .AsSelf();
+
+            builder
+                .RegisterType(typeof(MIFDbContextFactory<>))
+                .As(typeof(IMIFDbContextFactory<>))
+                .AsSelf();
+
+            builder
+                .RegisterType<DefaultMIFConfigFactory>()
+                .As<IMIFConfigFactory>();
+
+            builder
+                .RegisterType<DefaultRelativeFilePathResolver>()
+                .As<IRelativeFilePathResolver>();
+
+            builder
+                .RegisterType<MetaDataTimedIntegrationFactory>()
+                .As<ITimedIntegrationFactory>();
+
+            builder.RegisterType<TimedIntegrationController>()
+                .AsSelf()
+                .InstancePerLifetimeScope();
+
+            builder.RegisterType<TimedIntegrationRunAfterAttributeHandler>()
+                .AsSelf()
+                .InstancePerLifetimeScope();
+
+            RootDependencyInjectionContainer = builder.Build();
         }
 
-        public static Task Start(MIFStartupProperties properties = null)
+        public static async Task Start(MIFStartupProperties properties = null)
         {
             ConfigureServices();
 
-            return ServiceProvider.GetRequiredService<FrameworkContainer>().Start();
+            using (ILifetimeScope rootScope = RootDependencyInjectionContainer.BeginLifetimeScope())
+            {
+                await rootScope.Resolve<FrameworkContainer>().Start();
+            }
         }
 
         public static Task Stop()
         {
-            return ServiceProvider.GetRequiredService<FrameworkContainer>().Stop();
+            return rootScope.Resolve<FrameworkContainer>().Stop();
         }
     }
 }
