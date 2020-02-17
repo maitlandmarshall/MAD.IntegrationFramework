@@ -34,11 +34,9 @@ namespace MaitlandsInterfaceFramework.Pardot
                 throw new Exception($"{nameof(MIFConfig)} must implement {nameof(IPardotConfig)}.");
         }
 
-        private string BuildUriFromArgs(string relativeUri, (string argName, object argValue)[] args)
+        private string BuildRequestBody((string argName, object argValue)[] args)
         {
-            if (args.Length > 0)
-            {
-                string[] argumentsFormatted = args
+            string[] argumentsFormatted = args
                     .Where(y => y.argValue != null)
                     .Select(y =>
                     {
@@ -61,21 +59,17 @@ namespace MaitlandsInterfaceFramework.Pardot
                         return $"{argName}={argFinalValue}";
                     }).ToArray();
 
-                string argSegment = String.Join("&", argumentsFormatted);
-                relativeUri += $"?{argSegment}&format=json";
-            }
-            else
-            {
-                relativeUri += $"?format=json";
-            }
+            string argSegment = String.Join("&", argumentsFormatted);
 
-            return relativeUri;
+            return $"{argSegment}&format=json";
         }
 
         internal HttpWebRequest CreateWebRequest(string requestUri)
         {
             HttpWebRequest request = HttpWebRequest.CreateHttp(requestUri.ToString());
             request.KeepAlive = true;
+            request.Method = "POST";
+            request.ContentType = "application/x-www-form-urlencoded";
 
             if (!String.IsNullOrEmpty(this.ApiKey))
                 request.Headers.Add(HttpRequestHeader.Authorization, $"Pardot api_key={this.ApiKey}, user_key={this.Config.PardotUserKey}");
@@ -83,7 +77,7 @@ namespace MaitlandsInterfaceFramework.Pardot
             return request;
         }
 
-        internal async Task<string> GetWebRequestResponseAsString(HttpWebRequest request)
+        internal async Task<string> GetWebRequestResponseAsString(HttpWebRequest request, (string argName, object argValue)[] args)
         {
             const int maxRequestAttempts = 3;
             int requestAttempts = 1;
@@ -93,6 +87,12 @@ namespace MaitlandsInterfaceFramework.Pardot
                 try
                 {
                     ConcurrentRequests.Add(new object());
+
+                    using (Stream requestStream = await request.GetRequestStreamAsync())
+                    using (StreamWriter requestStreamWriter = new StreamWriter(requestStream))
+                    {
+                        await requestStreamWriter.WriteAsync(this.BuildRequestBody(args));
+                    }
 
                     using (HttpWebResponse response = request.GetResponse() as HttpWebResponse)
                     using (Stream responseStream = response.GetResponseStream())
@@ -120,15 +120,13 @@ namespace MaitlandsInterfaceFramework.Pardot
 
         internal async Task<ResponseType> ExecuteApiRequestForRelativeUri<ResponseType>(string relativeUri, params (string argName, object argValue)[] args)
         {
-            string apiFinalUri = this.BuildUriFromArgs(relativeUri, args);
-
-            if (String.IsNullOrEmpty(this.ApiKey) && apiFinalUri.Contains("login") == false)
+            if (String.IsNullOrEmpty(this.ApiKey) && relativeUri.Contains("login") == false)
                 await this.LoginAndGetApiKey();
 
-            Uri requestUri = new Uri(new Uri(ApiBaseUri), apiFinalUri);
+            Uri requestUri = new Uri(new Uri(ApiBaseUri), relativeUri);
 
             HttpWebRequest request = this.CreateWebRequest(requestUri.ToString());
-            string responseContent = await this.GetWebRequestResponseAsString(request);
+            string responseContent = await this.GetWebRequestResponseAsString(request, args);
 
             try
             {
