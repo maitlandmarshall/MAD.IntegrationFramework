@@ -1,22 +1,15 @@
 ﻿using Autofac;
-using MAD.IntegrationFramework.Configuration;
-using MAD.IntegrationFramework.Core;
-using MAD.IntegrationFramework.Database;
 using MAD.IntegrationFramework.Logging;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Reflection;
 using System.Threading.Tasks;
 
 namespace MAD.IntegrationFramework.Integrations
 {
     internal class TimedIntegrationController
     {
-        private object syncToken = new object();
+        private readonly object syncToken = new object();
 
         private readonly ILogger<TimedIntegrationController> logger;
         private readonly IExceptionLogger exceptionLogger;
@@ -27,7 +20,7 @@ namespace MAD.IntegrationFramework.Integrations
         private readonly TimedIntegrationExecutionHandler timedIntegrationExecutionHandler;
         private readonly IIntegrationScopeFactory integrationScopeFactory;
 
-        private List<TimedIntegrationTimer> timedIntegrationTimers;
+        private readonly List<TimedIntegrationTimer> timedIntegrationTimers;
 
         public TimedIntegrationController(ILogger<TimedIntegrationController> logger,
                                           IExceptionLogger exceptionLogger,
@@ -36,8 +29,6 @@ namespace MAD.IntegrationFramework.Integrations
                                           TimedIntegrationRunAfterAttributeHandler timedIntegrationRunAfterAttributeHandler,
                                           IIntegrationMetaDataService timedIntegrationMetaDataService,
                                           TimedIntegrationExecutionHandler timedIntegrationExecutionHandler,
-                                          IIntegrationScopeMIFDbContextResolver integrationMIFDbContextTypeResolver,
-                                          IMIFConfigResolver integrationMIFConfigTypeResolver,
                                           IIntegrationScopeFactory integrationScopeFactory
                                           )
         {
@@ -52,7 +43,7 @@ namespace MAD.IntegrationFramework.Integrations
             this.timedIntegrationTimers = new List<TimedIntegrationTimer>();
         }
 
-        public void Start ()
+        public void Start()
         {
             IEnumerable<Type> integrationTypes = this.timedIntegrationTypesResolver.ResolveTypes();
 

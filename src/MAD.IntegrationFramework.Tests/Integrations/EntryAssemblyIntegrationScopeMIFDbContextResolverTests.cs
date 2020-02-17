@@ -23,13 +23,7 @@ namespace MAD.IntegrationFramework.UnitTests.Integrations
         }
 
         [TestMethod]
-        public void ResolvesMany()
-        {
-            Assert.IsTrue(this.GetResolvedCollection().Count > 1);
-        }
-
-        [TestMethod]
-        public void ResolvesPrivates()
+        public void ResolveTypes_FindsPrivates_ShouldFindT1AndT2()
         {
             var types = this.GetResolvedCollection();
 
@@ -38,13 +32,13 @@ namespace MAD.IntegrationFramework.UnitTests.Integrations
         }
 
         [TestMethod]
-        public void ResolvesInternals()
+        public void ResolveTypes_FindsInternals_ShouldFindT3()
         {
             CollectionAssert.Contains(this.GetResolvedCollection(), typeof(T3));
         }
 
         [TestMethod]
-        public void ResolvesPublics()
+        public void ResolveTypes_FindsPublics_ShouldFindT4()
         {
             CollectionAssert.Contains(this.GetResolvedCollection(), typeof(T4));
         }

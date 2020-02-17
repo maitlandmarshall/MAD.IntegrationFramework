@@ -44,7 +44,7 @@ namespace MAD.IntegrationFramework.UnitTests.Integrations
         }
 
         [TestMethod]
-        public void SaveTest()
+        public void Save_SavableFields_DateTimesAreEqual()
         {
             FileSystemIntegrationMetaDataService fileSystemIntegrationMetaDataService = this.GetService();
 
@@ -67,7 +67,7 @@ namespace MAD.IntegrationFramework.UnitTests.Integrations
         }
 
         [TestMethod]
-        public void LoadTest()
+        public void Load_SavableFields_DateTimesAreEqual()
         {
             FileSystemIntegrationMetaDataService fileSystemIntegrationMetaDataService = this.GetService();
 

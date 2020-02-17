@@ -40,12 +40,16 @@ namespace MAD.IntegrationFramework.Integrations
             // Register the derived MIFDbContexts which will be used by the TimedIntegration types
             foreach (Type mifDbContextType in this.integrationMIFDbContextResolver.ResolveTypes())
             {
-                builder.Register(scope => this.mifDbContextFactory.Create(mifDbContextType)).InstancePerDependency().As(mifDbContextType);
+                builder.Register<object>(scope => this.mifDbContextFactory.Create(mifDbContextType)).InstancePerDependency().As(mifDbContextType);
             }
 
             // Register the derived MIFConfig component which will be used by the TimedIntegration types
-            Type mifConfigType = this.mifConfigResolver.ResolveType();
-            builder.Register(scope => this.mifConfigFactory.Create()).As(mifConfigType);
+            Type derivedMIFConfigType = this.mifConfigResolver.ResolveType();
+
+            if (derivedMIFConfigType == null)
+                return;
+
+            builder.Register(scope => this.mifConfigFactory.Create()).As(derivedMIFConfigType);
         }
 
         
