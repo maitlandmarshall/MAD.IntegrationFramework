@@ -6,12 +6,17 @@ using System.Text;
 
 namespace MAD.IntegrationFramework.Integrations
 {
-    internal class EntryAssemblyTimedIntegrationTypesResolver : ITimedIntegrationTypesResolver
+    internal class EntryAssemblyIntegrationResolver : IIntegrationResolver
     {
         public IEnumerable<Type> ResolveTypes()
         {
             Assembly assembly = Assembly.GetEntryAssembly();
 
+            return this.ResolveTypes(assembly);
+        }
+
+        public IEnumerable<Type> ResolveTypes (Assembly assembly)
+        {
             // Look through the assembly and yield all the classes which inherit from TimedIntegration
             foreach (Type timedInterfaceType in assembly.GetTypes().Where(y => typeof(TimedIntegration).IsAssignableFrom(y) && !y.IsAbstract))
             {

@@ -1,11 +1,9 @@
-﻿using MAD.IntegrationFramework.Core.Converters;
+﻿using MAD.IntegrationFramework.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
 
 namespace MAD.IntegrationFramework.Tests.JsonConverters
 {
@@ -123,7 +121,7 @@ namespace MAD.IntegrationFramework.Tests.JsonConverters
         private class NestedExample1ListModel : List<NestedExample1Model> { }
 
         private string NestedExample1Json;
-        
+
         [TestInitialize]
         public void Init()
         {

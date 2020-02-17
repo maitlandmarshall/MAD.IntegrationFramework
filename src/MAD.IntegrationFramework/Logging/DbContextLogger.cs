@@ -6,8 +6,9 @@ using System.Threading.Tasks;
 
 namespace MAD.IntegrationFramework.Logging
 {
-    internal class DbContextLogger<TDbContext, TLog> where TDbContext : MIFDbContext where TLog : class
-    {
+    internal class DbContextLogger<TDbContext, TLog> : IDbContextLogger <TDbContext, TLog>
+        where TDbContext : MIFDbContext where TLog : class
+    { 
         internal class DbContextLoggerSaveDisposable : IDisposable
         {
             private readonly Task saveTask;
@@ -46,11 +47,12 @@ namespace MAD.IntegrationFramework.Logging
         public async Task<IDisposable> Step(TLog log, Action<TLog> finish)
         {
             TDbContext dbContext = this.dbContextFactory.Create();
+
             await this.AddToDbSetAndSave(log, dbContext);
 
             return new DbContextLoggerSaveDisposable(Task.Run(async () =>
             {
-                finish();
+                finish(log);
 
                 await dbContext.SaveChangesAsync();
                 await dbContext.DisposeAsync();

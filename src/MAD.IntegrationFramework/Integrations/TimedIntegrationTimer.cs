@@ -26,11 +26,8 @@ namespace MAD.IntegrationFramework.Integrations
 
         public TimedIntegrationTimer(Type timedIntegrationType)
         {
-            TimedIntegrationAttribute timedIntegrationAttribute = timedIntegrationType.GetCustomAttribute<TimedIntegrationAttribute>(true);
-
             this.TimedIntegrationType = timedIntegrationType;
-
-            this.Interval = timedIntegrationAttribute.Frequency.TotalMilliseconds;
+            this.Interval = 1;
             this.AutoReset = true;
         }
 

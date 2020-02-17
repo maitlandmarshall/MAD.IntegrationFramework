@@ -49,15 +49,15 @@ namespace MAD.IntegrationFramework.Http
         // Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app)
         {
-            string bindingPath = MIF.Config.BindingPath;
+            //string bindingPath = MIF.Config.BindingPath;
 
-            if (!String.IsNullOrEmpty(bindingPath))
-            {
-                if (!bindingPath.StartsWith("/"))
-                    bindingPath = $"/{bindingPath}";
+            //if (!String.IsNullOrEmpty(bindingPath))
+            //{
+            //    if (!bindingPath.StartsWith("/"))
+            //        bindingPath = $"/{bindingPath}";
 
-                app.UsePathBase(bindingPath);
-            }
+            //    app.UsePathBase(bindingPath);
+            //}
 
             app.UseMvc(routes =>
             {

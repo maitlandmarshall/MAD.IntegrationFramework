@@ -1,19 +1,17 @@
 ﻿using MAD.IntegrationFramework.Logging;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace MAD.IntegrationFramework.Integrations
 {
     internal class TimedIntegrationExecutionHandler
     {
-        private readonly DbContextLogger<TimedIntegrationLogDbContext, TimedIntegrationLog> timedIntegrationLogger;
-        private readonly ITimedIntegrationMetaDataService timedIntegrationMetaDataService;
+        private readonly IDbContextLogger<TimedIntegrationLogDbContext, TimedIntegrationLog> timedIntegrationLogger;
+        private readonly IIntegrationMetaDataService timedIntegrationMetaDataService;
 
-        public TimedIntegrationExecutionHandler(DbContextLogger<TimedIntegrationLogDbContext, TimedIntegrationLog> timedIntegrationLogger,
-                                              ITimedIntegrationMetaDataService timedIntegrationMetaDataService)
+        public TimedIntegrationExecutionHandler(IDbContextLogger<TimedIntegrationLogDbContext, TimedIntegrationLog> timedIntegrationLogger,
+                                                IIntegrationMetaDataService timedIntegrationMetaDataService)
         {
             this.timedIntegrationLogger = timedIntegrationLogger;
             this.timedIntegrationMetaDataService = timedIntegrationMetaDataService;
@@ -39,7 +37,7 @@ namespace MAD.IntegrationFramework.Integrations
                         return;
                 }
 
-                using IDisposable _ = await timedIntegrationLogger.Step(
+                using IDisposable _ = await this.timedIntegrationLogger.Step(
                     log: new TimedIntegrationLog
                     {
                         InterfaceName = timedIntegration.GetType().Name,

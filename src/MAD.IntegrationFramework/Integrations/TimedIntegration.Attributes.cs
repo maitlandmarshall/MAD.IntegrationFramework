@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MAD.IntegrationFramework.Integrations;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -11,8 +12,8 @@ namespace MAD.IntegrationFramework.Core
 
         public RunAfterAttribute(Type interfaceTypeToRunAfter)
         {
-            if (!typeof(TimedInterface).IsAssignableFrom(interfaceTypeToRunAfter))
-                throw new NotSupportedException($"{nameof(interfaceTypeToRunAfter)} must derive from {nameof(TimedInterface)}");
+            if (!typeof(TimedIntegration).IsAssignableFrom(interfaceTypeToRunAfter))
+                throw new NotSupportedException($"{interfaceTypeToRunAfter.Name} must derive from {nameof(TimedIntegration)}.");
 
             this.IntegrationTypeToRunAfter = interfaceTypeToRunAfter;
         }

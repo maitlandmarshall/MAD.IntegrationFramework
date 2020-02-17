@@ -9,18 +9,18 @@ using System.Text;
 
 namespace MAD.IntegrationFramework.Integrations
 {
-    internal sealed class FileSystemTimedIntegrationMetaDataService : ITimedIntegrationMetaDataService
+    internal sealed class FileSystemIntegrationMetaDataService : IIntegrationMetaDataService
     {
         private static object syncToken = new object();
 
         private IRelativeFilePathResolver relativeFilePathResolver;
 
-        public FileSystemTimedIntegrationMetaDataService(IRelativeFilePathResolver integrationPathResolver)
+        public FileSystemIntegrationMetaDataService(IRelativeFilePathResolver integrationPathResolver)
         {
             this.relativeFilePathResolver = integrationPathResolver;
         }
 
-        private string FilePathForTimedIntegration(TimedIntegration timedIntegration)
+        internal string GetMetaDataFilePath(TimedIntegration timedIntegration)
         {
             return this.relativeFilePathResolver.ResolvePath($"{timedIntegration.GetType().Name}.json");
         }
@@ -32,7 +32,7 @@ namespace MAD.IntegrationFramework.Integrations
             if (!savableMembers.Any())
                 return;
 
-            string timedInterfaceSettingsFilePath = this.FilePathForTimedIntegration(timedIntegration);
+            string timedInterfaceSettingsFilePath = this.GetMetaDataFilePath(timedIntegration);
 
             if (!File.Exists(timedInterfaceSettingsFilePath))
                 return;
@@ -98,7 +98,7 @@ namespace MAD.IntegrationFramework.Integrations
 
                 string timedInterfaceSettingsData = JsonConvert.SerializeObject(propertiesToSave);
 
-                File.WriteAllText(this.FilePathForTimedIntegration(timedInterface), timedInterfaceSettingsData);
+                File.WriteAllText(this.GetMetaDataFilePath(timedInterface), timedInterfaceSettingsData);
             }
         }
 

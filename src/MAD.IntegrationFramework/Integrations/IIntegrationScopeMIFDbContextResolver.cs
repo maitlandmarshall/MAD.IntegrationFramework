@@ -4,7 +4,7 @@ using System.Text;
 
 namespace MAD.IntegrationFramework.Integrations
 {
-    internal interface ITimedIntegrationTypesResolver
+    internal interface IIntegrationScopeMIFDbContextResolver
     {
         IEnumerable<Type> ResolveTypes();
     }

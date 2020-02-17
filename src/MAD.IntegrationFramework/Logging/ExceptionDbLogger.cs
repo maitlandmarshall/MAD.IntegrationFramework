@@ -8,9 +8,9 @@ namespace MAD.IntegrationFramework.Logging
 {
     internal class ExceptionDbLogger : IExceptionLogger
     {
-        private readonly DbContextLogger<ExceptionDbContext> exceptionDbLogger;
+        private readonly IDbContextLogger<ExceptionDbContext, ExceptionLog> exceptionDbLogger;
 
-        public ExceptionDbLogger(DbContextLogger<ExceptionDbContext> exceptionDbLogger)
+        public ExceptionDbLogger(IDbContextLogger<ExceptionDbContext, ExceptionLog> exceptionDbLogger)
         {
             this.exceptionDbLogger = exceptionDbLogger;
         }

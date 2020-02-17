@@ -1,4 +1,5 @@
-﻿using MAD.IntegrationFramework.Http;
+﻿using MAD.IntegrationFramework.Configuration;
+using MAD.IntegrationFramework.Http;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using System;
@@ -9,25 +10,34 @@ namespace MAD.IntegrationFramework.Http
 {
     internal class DefaultWebHostFactory : IWebHostFactory
     {
+        private readonly IMIFConfigFactory mifConfigFactory;
+
+        public DefaultWebHostFactory(IMIFConfigFactory mifConfigFactory)
+        {
+            this.mifConfigFactory = mifConfigFactory;
+        }
+
         public IWebHost CreateWebHost()
         {
+            MIFConfig config = this.mifConfigFactory.Create();
+
             IWebHostBuilder builder = WebHost
                 .CreateDefaultBuilder()
                 .UseStartup<Startup>()
                 .UseIISIntegration();
 
-            if (MIF.Config.BindingPort == 80 || MIF.Config.BindingPort == 443)
+            if (config.BindingPort == 80 || config.BindingPort == 443)
             {
-                builder.UseHttpSys(config =>
+                builder.UseHttpSys(options =>
                 {
-                    config.UrlPrefixes.Add($"http://*:{MIF.Config.BindingPort}/{MIF.Config.BindingPath}");
+                    options.UrlPrefixes.Add($"http://*:{config.BindingPort}/{config.BindingPath}");
                 });
             }
             else
             {
-                builder.UseKestrel(config =>
+                builder.UseKestrel(options =>
                 {
-                    config.ListenAnyIP(MIF.Config.BindingPort);
+                    options.ListenAnyIP(config.BindingPort);
                 });
             }
 

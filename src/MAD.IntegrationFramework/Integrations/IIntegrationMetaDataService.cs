@@ -4,7 +4,7 @@ using System.Text;
 
 namespace MAD.IntegrationFramework.Integrations
 {
-    internal interface ITimedIntegrationMetaDataService
+    internal interface IIntegrationMetaDataService
     {
         void Save(TimedIntegration timedInterface);
         void Load(TimedIntegration timedIntegration);

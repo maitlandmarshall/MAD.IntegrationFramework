@@ -8,20 +8,28 @@ using System.Reflection;
 
 namespace MAD.IntegrationFramework.Configuration
 {
-    internal class DefaultMIFConfigFactory : IMIFConfigFactory
+    internal class FileSystemMIFConfigFactory : IMIFConfigFactory
     {
         private const string SettingsFileName = "settings.json";
 
         private readonly IRelativeFilePathResolver relativeFilePathResolver;
+        private readonly IMIFConfigResolver mifConfigTypeResolver;
 
-        public DefaultMIFConfigFactory(IRelativeFilePathResolver relativeFilePathResolver)
+        public FileSystemMIFConfigFactory(IRelativeFilePathResolver relativeFilePathResolver,
+                                          IMIFConfigResolver mifConfigTypeResolver)
         {
             this.relativeFilePathResolver = relativeFilePathResolver;
+            this.mifConfigTypeResolver = mifConfigTypeResolver;
         }
 
         public MIFConfig Create()
         {
-            Type typeWhichInheritsFromMIFConfig = this.GetMifsConfigConfigurationType();
+            Type typeWhichInheritsFromMIFConfig = this.mifConfigTypeResolver.ResolveType();
+
+            // If there isn't a type from the type resolver, instantiate a default MIFConfig
+            if (typeWhichInheritsFromMIFConfig == null)
+                typeWhichInheritsFromMIFConfig = typeof(MIFConfig);
+
             string settingsFilePath = this.relativeFilePathResolver.ResolvePath(SettingsFileName);
 
             if (!File.Exists(settingsFilePath))
@@ -33,16 +41,6 @@ namespace MAD.IntegrationFramework.Configuration
                 string settingsData = File.ReadAllText(settingsFilePath);
                 return JsonConvert.DeserializeObject(settingsData, typeWhichInheritsFromMIFConfig) as MIFConfig;
             }
-        }
-
-        private Type GetMifsConfigConfigurationType()
-        {
-            Type typeWhichInheritsFromMIFConfig = Assembly.GetEntryAssembly().GetTypes().FirstOrDefault(y => typeof(MIFConfig).IsAssignableFrom(y));
-
-            if (typeWhichInheritsFromMIFConfig == null)
-                typeWhichInheritsFromMIFConfig = typeof(MIFConfig);
-
-            return typeWhichInheritsFromMIFConfig;
         }
     }
 }

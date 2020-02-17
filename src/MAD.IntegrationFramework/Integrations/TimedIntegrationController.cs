@@ -1,5 +1,7 @@
 ﻿using Autofac;
+using MAD.IntegrationFramework.Configuration;
 using MAD.IntegrationFramework.Core;
+using MAD.IntegrationFramework.Database;
 using MAD.IntegrationFramework.Logging;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -18,20 +20,25 @@ namespace MAD.IntegrationFramework.Integrations
 
         private readonly ILogger<TimedIntegrationController> logger;
         private readonly IExceptionLogger exceptionLogger;
-        private readonly ITimedIntegrationTypesResolver timedIntegrationTypesResolver;
+        private readonly IIntegrationResolver timedIntegrationTypesResolver;
         private readonly ILifetimeScope lifetimeScope;
         private readonly TimedIntegrationRunAfterAttributeHandler timedIntegrationRunAfterAttributeHandler;
-        private readonly ITimedIntegrationMetaDataService timedIntegrationMetaDataService;
+        private readonly IIntegrationMetaDataService timedIntegrationMetaDataService;
         private readonly TimedIntegrationExecutionHandler timedIntegrationExecutionHandler;
+        private readonly IIntegrationScopeFactory integrationScopeFactory;
+
         private List<TimedIntegrationTimer> timedIntegrationTimers;
 
         public TimedIntegrationController(ILogger<TimedIntegrationController> logger,
                                           IExceptionLogger exceptionLogger,
-                                          ITimedIntegrationTypesResolver timedIntegrationTypesResolver,
+                                          IIntegrationResolver timedIntegrationTypesResolver,
                                           ILifetimeScope lifetimeScope,
                                           TimedIntegrationRunAfterAttributeHandler timedIntegrationRunAfterAttributeHandler,
-                                          ITimedIntegrationMetaDataService timedIntegrationMetaDataService,
-                                          TimedIntegrationExecutionHandler timedIntegrationExecutionHandler
+                                          IIntegrationMetaDataService timedIntegrationMetaDataService,
+                                          TimedIntegrationExecutionHandler timedIntegrationExecutionHandler,
+                                          IIntegrationScopeMIFDbContextResolver integrationMIFDbContextTypeResolver,
+                                          IMIFConfigResolver integrationMIFConfigTypeResolver,
+                                          IIntegrationScopeFactory integrationScopeFactory
                                           )
         {
             this.logger = logger;
@@ -41,7 +48,7 @@ namespace MAD.IntegrationFramework.Integrations
             this.timedIntegrationRunAfterAttributeHandler = timedIntegrationRunAfterAttributeHandler;
             this.timedIntegrationMetaDataService = timedIntegrationMetaDataService;
             this.timedIntegrationExecutionHandler = timedIntegrationExecutionHandler;
-
+            this.integrationScopeFactory = integrationScopeFactory;
             this.timedIntegrationTimers = new List<TimedIntegrationTimer>();
         }
 
@@ -71,7 +78,7 @@ namespace MAD.IntegrationFramework.Integrations
 
             try
             {
-                using (ILifetimeScope scope = this.lifetimeScope.BeginLifetimeScope(y => y.RegisterType(serviceTimer.TimedIntegrationType).InstancePerLifetimeScope().AsSelf()))
+                using (ILifetimeScope scope = this.integrationScopeFactory.Create(serviceTimer.TimedIntegrationType, this.lifetimeScope))
                 {
                     // Wait for another TimedIntegration to complete if this TimedIntegration has the [RunAfter] attribute.
                     await this.timedIntegrationRunAfterAttributeHandler.WaitForOthers(serviceTimer, this.timedIntegrationTimers);
@@ -80,6 +87,7 @@ namespace MAD.IntegrationFramework.Integrations
                     this.timedIntegrationMetaDataService.Load(timedIntegration);
 
                     await this.timedIntegrationExecutionHandler.Execute(timedIntegration);
+                    serviceTimer.Interval = timedIntegration.Interval.TotalMilliseconds;
                 }
             }
             catch (Exception ex)

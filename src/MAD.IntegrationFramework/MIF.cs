@@ -14,7 +14,8 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 
-[assembly: InternalsVisibleTo("MAD.IntegrationFramework.Tests")]
+[assembly: InternalsVisibleTo("MAD.IntegrationFramework.IntegrationTests")]
+[assembly: InternalsVisibleTo("MAD.IntegrationFramework.UnitTests")]
 namespace MAD.IntegrationFramework
 {
     public class MIFStartupProperties { }
@@ -27,69 +28,7 @@ namespace MAD.IntegrationFramework
         private static void ConfigureServices()
         {
             ContainerBuilder builder = new ContainerBuilder();
-            builder
-                .RegisterType(typeof(Logger<>))
-                .As(typeof(ILogger<>));
-
-            builder
-                .RegisterType<FrameworkContainer>()
-                .AsSelf()
-                .InstancePerLifetimeScope();
-
-            builder
-                .RegisterType<AutomaticMigrationService>()
-                .AsSelf()
-                .InstancePerLifetimeScope();
-
-            builder
-                .RegisterType<DefaultWebHostFactory>()
-                .As<IWebHostFactory>()
-                .InstancePerLifetimeScope();
-
-            builder
-                .RegisterType<ExceptionDbLogger>()
-                .AsSelf();
-
-            builder
-                .RegisterType<SqlStatementBuilder>()
-                .AsSelf();
-
-            builder
-                .RegisterType<EmbeddedResourceService>()
-                .AsSelf();
-
-            builder
-                .RegisterType<FileSystemTimedIntegrationMetaDataService>()
-                .AsSelf();
-
-            builder
-                .RegisterType<FrameworkConfigurationService>()
-                .AsSelf();
-
-            builder
-                .RegisterType(typeof(MIFDbContextFactory<>))
-                .As(typeof(IMIFDbContextFactory<>))
-                .AsSelf();
-
-            builder
-                .RegisterType<DefaultMIFConfigFactory>()
-                .As<IMIFConfigFactory>();
-
-            builder
-                .RegisterType<DefaultRelativeFilePathResolver>()
-                .As<IRelativeFilePathResolver>();
-
-            builder
-                .RegisterType<MetaDataTimedIntegrationFactory>()
-                .As<ITimedIntegrationFactory>();
-
-            builder.RegisterType<TimedIntegrationController>()
-                .AsSelf()
-                .InstancePerLifetimeScope();
-
-            builder.RegisterType<TimedIntegrationRunAfterAttributeHandler>()
-                .AsSelf()
-                .InstancePerLifetimeScope();
+            builder.RegisterModule<FrameworkModule>();
 
             RootDependencyInjectionContainer = builder.Build();
         }
@@ -98,7 +37,7 @@ namespace MAD.IntegrationFramework
         {
             ConfigureServices();
 
-            using (ILifetimeScope rootScope = RootDependencyInjectionContainer.BeginLifetimeScope())
+            using (rootScope = RootDependencyInjectionContainer.BeginLifetimeScope())
             {
                 await rootScope.Resolve<FrameworkContainer>().Start();
             }

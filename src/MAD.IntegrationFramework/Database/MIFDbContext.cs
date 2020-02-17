@@ -9,14 +9,15 @@ namespace MAD.IntegrationFramework.Database
 {
     public abstract class MIFDbContext : DbContext
     {
+        internal event EventHandler<DbContextOptionsBuilder> Configuring;
+
         public DbConnection Connection => this.Database.GetDbConnection();
 
-        public MIFDbContext() : this(MIF.Config.SqlConnectionString) { }
-
-        public MIFDbContext(string connectionString) : base(new DbContextOptionsBuilder().UseSqlServer(connectionString).Options)
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            this.Database.SetCommandTimeout(TimeSpan.FromMinutes(10));
-            this.Database.EnsureCreated();
+            base.OnConfiguring(optionsBuilder);
+
+            this.Configuring?.Invoke(this, optionsBuilder);
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

@@ -5,8 +5,14 @@ using System.Text;
 
 namespace MAD.IntegrationFramework.Database
 {
-    internal interface IMIFDbContextFactory <DbContext> where DbContext : MIFDbContext
+    internal interface IMIFDbContextFactory
     {
-        DbContext Create();
+        MIFDbContext Create(Type dbContextType);
+    }
+
+    internal interface IMIFDbContextFactory <TDbContext> 
+        where TDbContext : MIFDbContext
+    {
+        TDbContext Create();
     }
 }
