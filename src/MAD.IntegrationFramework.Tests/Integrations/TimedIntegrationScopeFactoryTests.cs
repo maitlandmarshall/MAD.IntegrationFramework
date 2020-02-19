@@ -62,7 +62,7 @@ namespace MAD.IntegrationFramework.UnitTests.Integrations
         }
 
         [TestMethod]
-        public void Create_TimedIntegration_IsLoaded()
+        public void Create_TimedIntegration_IsRegistered()
         {
             var scope = this.GetIntegrationScope();
             Assert.IsTrue(scope.IsRegistered<TestTimedIntegration>());
@@ -76,7 +76,7 @@ namespace MAD.IntegrationFramework.UnitTests.Integrations
         }
 
         [TestMethod]
-        public void Create_DbContext_IsResolved()
+        public void Create_TimedIntegrationDbContextConstructorParam_IsResolved()
         {
             var scope = this.GetIntegrationScope();
 
@@ -86,9 +86,9 @@ namespace MAD.IntegrationFramework.UnitTests.Integrations
         }
 
         [TestMethod]
-        public void Create_DbContext_IsDisposedOnScopeDispose()
+        public void Create_TimedIntegrationDbContextConstructorParam_IsDisposedOnScopeDispose()
         {
-            MIFDbContext dbContext;
+            MIFDbContext dbContext; 
 
             using (var scope = this.GetIntegrationScope())
             {

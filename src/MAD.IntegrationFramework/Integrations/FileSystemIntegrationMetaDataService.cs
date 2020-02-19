@@ -20,6 +20,7 @@ namespace MAD.IntegrationFramework.Integrations
             this.relativeFilePathResolver = integrationPathResolver;
         }
 
+        // TODO: Should this be moved to its own service?
         internal string GetMetaDataFilePath(TimedIntegration timedIntegration)
         {
             return this.relativeFilePathResolver.ResolvePath($"{timedIntegration.GetType().Name}.json");

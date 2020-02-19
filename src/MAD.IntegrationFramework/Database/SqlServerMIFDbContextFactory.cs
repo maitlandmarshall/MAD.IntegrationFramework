@@ -4,8 +4,7 @@ using System;
 
 namespace MAD.IntegrationFramework.Database
 {
-    internal class SqlServerMIFDbContextFactory<TDbContext> : IMIFDbContextFactory<TDbContext>
-        where TDbContext : MIFDbContext
+    internal class SqlServerMIFDbContextFactory : IMIFDbContextFactory
     {
         private readonly IAutomaticMigrationService automaticMigrationService;
         private readonly IMIFConfigFactory mifConfigFactory;
@@ -19,7 +18,7 @@ namespace MAD.IntegrationFramework.Database
 
         public MIFDbContext Create(Type dbContextType)
         {
-            if (typeof(MIFDbContext).IsAssignableFrom(dbContextType))
+            if (!typeof(MIFDbContext).IsAssignableFrom(dbContextType))
                 throw new ArgumentException($"{nameof(dbContextType)} must be Type {nameof(MIFDbContext)}.");
 
             MIFDbContext dbContext = Activator.CreateInstance(dbContextType) as MIFDbContext;
@@ -40,11 +39,6 @@ namespace MAD.IntegrationFramework.Database
             return dbContext;
         }
 
-        public TDbContext Create()
-        {
-            return this.Create(typeof(TDbContext)) as TDbContext;
-        }
-
         private void DbContext_Configuring(object sender, DbContextOptionsBuilder e)
         {
             MIFConfig config = this.mifConfigFactory.Create();
@@ -53,6 +47,18 @@ namespace MAD.IntegrationFramework.Database
                 throw new ConnectionStringIsNullOrEmptyException();
 
             e.UseSqlServer(config.SqlConnectionString);
+        }
+    }
+
+    internal class SqlServerMIFDbContextFactory<TDbContext> : SqlServerMIFDbContextFactory, IMIFDbContextFactory<TDbContext>
+        where TDbContext : MIFDbContext
+    {
+        public SqlServerMIFDbContextFactory(IAutomaticMigrationService automaticMigrationService,
+                                            IMIFConfigFactory mifConfigFactory) : base(automaticMigrationService, mifConfigFactory) { }
+
+        public TDbContext Create()
+        {
+            return this.Create(typeof(TDbContext)) as TDbContext;
         }
     }
 }

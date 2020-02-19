@@ -1,4 +1,5 @@
-﻿using MAD.IntegrationFramework.Logging;
+﻿using MAD.IntegrationFramework.Database;
+using MAD.IntegrationFramework.Logging;
 using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
@@ -7,23 +8,23 @@ namespace MAD.IntegrationFramework.Integrations
 {
     internal class TimedIntegrationExecutionHandler
     {
-        private readonly IDbContextLogger<TimedIntegrationLogDbContext, TimedIntegrationLog> timedIntegrationLogger;
+        private readonly IMIFDbContextFactory<TimedIntegrationLogDbContext> timedIntegrationLogDbContextFactory;
         private readonly IIntegrationMetaDataService timedIntegrationMetaDataService;
 
-        public TimedIntegrationExecutionHandler(IDbContextLogger<TimedIntegrationLogDbContext, TimedIntegrationLog> timedIntegrationLogger,
+        public TimedIntegrationExecutionHandler(IMIFDbContextFactory<TimedIntegrationLogDbContext> timedIntegrationLogDbContextFactory,
                                                 IIntegrationMetaDataService timedIntegrationMetaDataService)
         {
-            this.timedIntegrationLogger = timedIntegrationLogger;
+            this.timedIntegrationLogDbContextFactory = timedIntegrationLogDbContextFactory;
             this.timedIntegrationMetaDataService = timedIntegrationMetaDataService;
         }
 
-        public async Task Execute(TimedIntegration timedIntegration)
+        public async Task Execute(TimedIntegration timedIntegration, TimedIntegrationTimer timer)
         {
             IScheduledIntegration scheduledInterface = timedIntegration as IScheduledIntegration;
 
             try
             {
-                timedIntegration.Timer.LastStart = DateTime.Now;
+                timer.LastStart = DateTime.Now;
 
                 // Every time this interface is executed, check if it's enabled.
                 if (!timedIntegration.IsEnabled)
@@ -37,30 +38,41 @@ namespace MAD.IntegrationFramework.Integrations
                         return;
                 }
 
-                using IDisposable _ = await this.timedIntegrationLogger.Step(
-                    log: new TimedIntegrationLog
+                using (TimedIntegrationLogDbContext dbContext = this.timedIntegrationLogDbContextFactory.Create())
+                {
+                    DateTime lastRun = DateTime.Now;
+
+                    TimedIntegrationLog log = new TimedIntegrationLog
                     {
                         InterfaceName = timedIntegration.GetType().Name,
-                        StartDateTime = DateTime.Now,
+                        StartDateTime = lastRun,
                         ExecutablePath = Process.GetCurrentProcess().MainModule.FileName,
                         MachineName = Environment.MachineName
-                    },
-                    finish: (log) => log.EndDateTime = DateTime.Now
-                );
+                    };
 
-                DateTime lastRun = DateTime.Now;
+                    dbContext.TimedIntegrationLogs.Add(log);
+                    await dbContext.SaveChangesAsync();
 
-                await timedIntegration.Execute();
+                    try
+                    {
+                        await timedIntegration.Execute();
+                    }
+                    finally
+                    {
+                        log.EndDateTime = DateTime.Now;
+                        await dbContext.SaveChangesAsync();
 
-                if (scheduledInterface != null)
-                    scheduledInterface.LastRunDateTime = lastRun;
+                        if (scheduledInterface != null)
+                            scheduledInterface.LastRunDateTime = lastRun;
+                    }
+                }
             }
             finally
             {
                 // Save the configuration data after each execution of the TimedInterface
                 this.timedIntegrationMetaDataService.Save(timedIntegration);
 
-                timedIntegration.Timer.LastFinish = DateTime.Now;
+                timer.LastFinish = DateTime.Now;
             }
         }
     }

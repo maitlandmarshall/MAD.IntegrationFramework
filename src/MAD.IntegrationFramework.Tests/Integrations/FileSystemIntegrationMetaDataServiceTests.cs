@@ -44,14 +44,13 @@ namespace MAD.IntegrationFramework.UnitTests.Integrations
         }
 
         [TestMethod]
-        public void Save_SavableFields_DateTimesAreEqual()
+        public void Save_SavableAttributeFields_CreatesSaveFile()
         {
             FileSystemIntegrationMetaDataService fileSystemIntegrationMetaDataService = this.GetService();
 
-            DateTime saveValue = new DateTime(2020, 1, 1);
             TestTimedIntegration testIntegration = new TestTimedIntegration
             {
-                TestDateTime = saveValue
+                TestDateTime = new DateTime(2020, 1, 1)
             };
 
             fileSystemIntegrationMetaDataService.Save(testIntegration);
@@ -59,15 +58,10 @@ namespace MAD.IntegrationFramework.UnitTests.Integrations
             string savePath = fileSystemIntegrationMetaDataService.GetMetaDataFilePath(testIntegration);
 
             Assert.IsTrue(File.Exists(savePath));
-
-            JObject savedJson = JsonConvert.DeserializeObject<JObject>(File.ReadAllText(savePath));
-            DateTime saveFileValue = savedJson[nameof(testIntegration.TestDateTime)].ToObject<DateTime>();
-
-            Assert.AreEqual(saveValue, saveFileValue);
         }
 
         [TestMethod]
-        public void Load_SavableFields_DateTimesAreEqual()
+        public void Load_SavableAttributeFields_DateTimesAreEqual()
         {
             FileSystemIntegrationMetaDataService fileSystemIntegrationMetaDataService = this.GetService();
 

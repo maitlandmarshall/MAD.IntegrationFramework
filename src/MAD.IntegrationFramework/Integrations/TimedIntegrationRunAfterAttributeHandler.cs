@@ -20,7 +20,7 @@ namespace MAD.IntegrationFramework.Integrations
             RunAfterAttribute runAfterAttribute = check.TimedIntegrationType.GetCustomAttribute<RunAfterAttribute>();
 
             if (runAfterAttribute == null)
-                throw new MissingAttributeException(typeof(RunAfterAttribute));
+                return;
 
             TimedIntegrationTimer integrationTimerToRunAfter = toWaitFor.FirstOrDefault(y => y.TimedIntegrationType == runAfterAttribute.IntegrationTypeToRunAfter); ;
 

@@ -8,22 +8,27 @@ namespace MAD.IntegrationFramework.Logging
 {
     internal class ExceptionDbLogger : IExceptionLogger
     {
-        private readonly IDbContextLogger<ExceptionDbContext, ExceptionLog> exceptionDbLogger;
+        private readonly IMIFDbContextFactory<ExceptionDbContext> exceptionDbLogger;
 
-        public ExceptionDbLogger(IDbContextLogger<ExceptionDbContext, ExceptionLog> exceptionDbLogger)
+        public ExceptionDbLogger(IMIFDbContextFactory<ExceptionDbContext> exceptionDbLogger)
         {
             this.exceptionDbLogger = exceptionDbLogger;
         }
 
         public async Task LogException(Exception exception, string interfaceName = null)
         {
-            await this.exceptionDbLogger.Log(new ExceptionLog
+            using (ExceptionDbContext dbContext = this.exceptionDbLogger.Create())
             {
-                Message = exception.Message,
-                Detail = exception.ToString(),
-                DateTime = DateTime.Now,
-                Interface = interfaceName
-            });
+                dbContext.Add(new ExceptionLog
+                {
+                    Message = exception.Message,
+                    Detail = exception.ToString(),
+                    DateTime = DateTime.Now,
+                    Interface = interfaceName
+                });
+
+                await dbContext.SaveChangesAsync();
+            }
         }
     }
 }

@@ -75,9 +75,10 @@ namespace MAD.IntegrationFramework.Integrations
                     await this.timedIntegrationRunAfterAttributeHandler.WaitForOthers(serviceTimer, this.timedIntegrationTimers);
 
                     TimedIntegration timedIntegration = scope.Resolve(serviceTimer.TimedIntegrationType) as TimedIntegration;
+
                     this.timedIntegrationMetaDataService.Load(timedIntegration);
 
-                    await this.timedIntegrationExecutionHandler.Execute(timedIntegration);
+                    await this.timedIntegrationExecutionHandler.Execute(timedIntegration, serviceTimer);
                     serviceTimer.Interval = timedIntegration.Interval.TotalMilliseconds;
                 }
             }

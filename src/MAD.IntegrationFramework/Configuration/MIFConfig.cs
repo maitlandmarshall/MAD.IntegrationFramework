@@ -1,4 +1,6 @@
-﻿namespace MAD.IntegrationFramework.Configuration
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace MAD.IntegrationFramework.Configuration
 {
     public class MIFConfig
     {

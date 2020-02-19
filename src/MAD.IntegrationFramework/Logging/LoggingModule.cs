@@ -13,7 +13,6 @@ namespace MAD.IntegrationFramework.Logging
         {
             base.Load(builder);
 
-            builder.RegisterGeneric(typeof(DbContextLogger<,>)).As(typeof(IDbContextLogger<,>));
             builder.RegisterGeneric(typeof(Logger<>)).As(typeof(ILogger<>));
 
             builder.RegisterType<LoggerFactory>().As<ILoggerFactory>();

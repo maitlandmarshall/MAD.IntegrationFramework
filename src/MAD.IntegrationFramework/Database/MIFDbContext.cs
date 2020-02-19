@@ -13,6 +13,9 @@ namespace MAD.IntegrationFramework.Database
 
         public DbConnection Connection => this.Database.GetDbConnection();
 
+        public MIFDbContext() : base() { }
+        public MIFDbContext(DbContextOptions options) : base(options) { }
+
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             base.OnConfiguring(optionsBuilder);

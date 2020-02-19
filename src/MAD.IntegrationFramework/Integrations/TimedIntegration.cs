@@ -10,8 +10,6 @@ namespace MAD.IntegrationFramework.Integrations
 {
     public abstract class TimedIntegration
     {
-        internal TimedIntegrationTimer Timer { get; set; }
-
         public abstract TimeSpan Interval { get; }
         public abstract bool IsEnabled { get; }
 

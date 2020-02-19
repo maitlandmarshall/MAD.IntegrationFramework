@@ -27,7 +27,7 @@ namespace MAD.IntegrationFramework.Integrations
         public TimedIntegrationTimer(Type timedIntegrationType)
         {
             this.TimedIntegrationType = timedIntegrationType;
-            this.Interval = 1;
+            this.Interval = TimeSpan.FromSeconds(1).TotalMilliseconds;
             this.AutoReset = true;
         }
 

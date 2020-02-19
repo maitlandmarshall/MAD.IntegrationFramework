@@ -49,7 +49,7 @@ namespace MAD.IntegrationFramework.Integrations
             if (derivedMIFConfigType == null)
                 return;
 
-            builder.Register(scope => this.mifConfigFactory.Create()).As(derivedMIFConfigType);
+            builder.Register<object>(scope => this.mifConfigFactory.Create()).As(derivedMIFConfigType);
         }
 
         

@@ -25,17 +25,26 @@ namespace MAD.IntegrationFramework
         internal static IContainer RootDependencyInjectionContainer { get; private set; }
         private static ILifetimeScope rootScope;
 
-        private static void ConfigureServices()
+        public static Task Start<Startup>(MIFStartupProperties properties = null) where Startup : MIFStartup, new()
+        {
+            Startup startup = new Startup();
+
+            return Start(properties, startup);
+        }
+
+        public static Task Start(MIFStartupProperties properties = null)
+        {
+            return Start(properties, null);
+        }
+
+        private static async Task Start(MIFStartupProperties properties = null, MIFStartup startup = null)
         {
             ContainerBuilder builder = new ContainerBuilder();
             builder.RegisterModule<FrameworkModule>();
 
-            RootDependencyInjectionContainer = builder.Build();
-        }
+            startup?.ConfigureServices(builder);
 
-        public static async Task Start(MIFStartupProperties properties = null)
-        {
-            ConfigureServices();
+            RootDependencyInjectionContainer = builder.Build();
 
             using (rootScope = RootDependencyInjectionContainer.BeginLifetimeScope())
             {

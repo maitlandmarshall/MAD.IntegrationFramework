@@ -33,4 +33,13 @@ namespace MAD.IntegrationFramework.UnitTests.Integrations
             e.UseInMemoryDatabase(databaseName: "test");
         }
     }
+
+    internal class InMemoryMIFDbContextFactory<TDbContext> : InMemoryMIFDbContextFactory, IMIFDbContextFactory<TDbContext>
+        where TDbContext : MIFDbContext
+    {
+        public TDbContext Create()
+        {
+            return this.Create(typeof(TDbContext)) as TDbContext;
+        }
+    }
 }

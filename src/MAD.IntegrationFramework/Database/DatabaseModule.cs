@@ -12,6 +12,7 @@ namespace MAD.IntegrationFramework.Database
             base.Load(builder);
 
             builder.RegisterGeneric(typeof(SqlServerMIFDbContextFactory<>)).As(typeof(IMIFDbContextFactory<>));
+            builder.RegisterType<SqlServerMIFDbContextFactory>().As<IMIFDbContextFactory>();
 
             builder.RegisterType<AutomaticMigrationService>().As<IAutomaticMigrationService>();
             builder.RegisterType(typeof(SqlStatementBuilder)).AsSelf();
