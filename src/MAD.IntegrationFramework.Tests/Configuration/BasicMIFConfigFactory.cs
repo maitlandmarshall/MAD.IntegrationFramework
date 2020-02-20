@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace MAD.IntegrationFramework.UnitTests.Configuration
+namespace MAD.IntegrationFramework.Tests.Configuration
 {
     internal class BasicMIFConfigFactory : IMIFConfigFactory
     {

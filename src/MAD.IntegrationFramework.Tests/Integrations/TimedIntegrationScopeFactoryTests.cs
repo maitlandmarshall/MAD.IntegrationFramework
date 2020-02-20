@@ -2,14 +2,14 @@
 using MAD.IntegrationFramework.Configuration;
 using MAD.IntegrationFramework.Database;
 using MAD.IntegrationFramework.Integrations;
-using MAD.IntegrationFramework.UnitTests.Configuration;
+using MAD.IntegrationFramework.Tests.Configuration;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MAD.IntegrationFramework.UnitTests.Integrations
+namespace MAD.IntegrationFramework.Tests.Integrations
 {
     [TestClass]
     public class TimedIntegrationScopeFactoryTests

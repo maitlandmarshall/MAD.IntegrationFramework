@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MAD.IntegrationFramework.UnitTests.Integrations
+namespace MAD.IntegrationFramework.Tests.Integrations
 {
     [TestClass]
     public class TimedIntegrationExecutionHandlerTests

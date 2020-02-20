@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MAD.IntegrationFramework.UnitTests
+namespace MAD.IntegrationFramework.Tests
 {
     [TestClass]
     public class MIFTests

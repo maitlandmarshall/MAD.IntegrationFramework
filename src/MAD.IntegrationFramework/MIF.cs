@@ -14,8 +14,7 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 
-[assembly: InternalsVisibleTo("MAD.IntegrationFramework.IntegrationTests")]
-[assembly: InternalsVisibleTo("MAD.IntegrationFramework.UnitTests")]
+[assembly: InternalsVisibleTo("MAD.IntegrationFramework.Tests")]
 namespace MAD.IntegrationFramework
 {
     public class MIFStartupProperties { }

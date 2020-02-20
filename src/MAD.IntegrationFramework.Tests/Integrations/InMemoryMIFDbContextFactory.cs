@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace MAD.IntegrationFramework.UnitTests.Integrations
+namespace MAD.IntegrationFramework.Tests.Integrations
 {
     internal class InMemoryMIFDbContextFactory : IMIFDbContextFactory
     {
