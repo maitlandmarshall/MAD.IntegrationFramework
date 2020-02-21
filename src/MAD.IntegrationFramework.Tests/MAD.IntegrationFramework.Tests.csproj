@@ -18,10 +18,4 @@
     <ProjectReference Include="..\MAD.IntegrationFramework\MAD.IntegrationFramework.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <None Update="JsonConverters\NestedJsonExample1.js">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
-
 </Project>
