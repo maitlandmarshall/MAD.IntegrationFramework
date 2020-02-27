@@ -85,7 +85,7 @@ namespace MAD.IntegrationFramework.Integrations
             catch (Exception ex)
             {
                 this.logger.LogError(ex, ex.Message);
-                await this.exceptionLogger.LogException(ex, serviceTimer.TimedIntegrationType.GetType().Name);
+                await this.exceptionLogger.LogException(ex, serviceTimer.TimedIntegrationType.Name);
 
                 // Wait for 6 hours before starting the timer again to prevent error spam
                 // TODO: Think of a better way to do this
