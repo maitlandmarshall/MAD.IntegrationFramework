@@ -54,6 +54,8 @@ namespace MaitlandsInterfaceFramework
 
         public static void Start(MIFStartupProperties properties = null)
         {
+            ServiceCancellationToken = new CancellationTokenSource();
+
             WriteToLog($"MIF initializing {DateTime.Now}");
 
             try
@@ -92,8 +94,6 @@ namespace MaitlandsInterfaceFramework
                 TimedInterfaceService = new TimedInterfaceService();
 
                 WriteToLog("Timed Tnterface Service started");
-
-                ServiceCancellationToken = new CancellationTokenSource();
 
                 Task.Delay(TimeSpan.FromMilliseconds(-1), ServiceCancellationToken.Token).Wait();
             }
