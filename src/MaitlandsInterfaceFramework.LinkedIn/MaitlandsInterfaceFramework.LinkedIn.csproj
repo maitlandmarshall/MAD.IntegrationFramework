@@ -14,7 +14,7 @@
 
   <ItemGroup>
     <Reference Include="LinkedInNET.ApiV2">
-      <HintPath>..\..\..\LinkedInNET\src\NET45.Sparkle.LinkedInNET\bin\Debug\LinkedInNET.ApiV2.dll</HintPath>
+      <HintPath>..\..\..\LinkedInNET\src\Sparkle.LinkedInNET\bin\Debug\LinkedInNET.ApiV2.dll</HintPath>
     </Reference>
   </ItemGroup>
 
