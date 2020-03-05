@@ -6,7 +6,7 @@ namespace MAD.IntegrationFramework.Integrations
 {
     internal interface IIntegrationMetaDataService
     {
-        void Save(TimedIntegration timedInterface);
+        void Save(TimedIntegration timedIntegration);
         void Load(TimedIntegration timedIntegration);
     }
 }

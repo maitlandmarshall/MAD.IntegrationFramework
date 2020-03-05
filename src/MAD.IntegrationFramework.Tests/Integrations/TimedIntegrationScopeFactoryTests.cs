@@ -3,6 +3,7 @@ using MAD.IntegrationFramework.Configuration;
 using MAD.IntegrationFramework.Database;
 using MAD.IntegrationFramework.Integrations;
 using MAD.IntegrationFramework.Tests.Configuration;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
@@ -14,7 +15,12 @@ namespace MAD.IntegrationFramework.Tests.Integrations
     [TestClass]
     public class TimedIntegrationScopeFactoryTests
     {
-        private class TestDbContext : MIFDbContext { }
+        private class TestDbContext : MIFDbContext
+        {
+            public TestDbContext(DbContextOptions options) : base(options)
+            {
+            }
+        }
 
         private class TestIntegrationScopeMIFDbContextResolver : IIntegrationScopeMIFDbContextResolver
         {
@@ -55,9 +61,8 @@ namespace MAD.IntegrationFramework.Tests.Integrations
         {
             return new TimedIntegrationScopeFactory(
                 integrationScopeMIFDbContextResolver: new TestIntegrationScopeMIFDbContextResolver(),
-                mifConfigResolver: new NullMIFConfigResolver(),
                 mifDbContextFactory: new InMemoryMIFDbContextFactory(),
-                mifConfigFactory: new BasicMIFConfigFactory()
+                config: new BasicMIFConfigFactory().Create()
             );
         }
 

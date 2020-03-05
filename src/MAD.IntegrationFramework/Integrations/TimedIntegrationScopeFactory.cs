@@ -10,19 +10,16 @@ namespace MAD.IntegrationFramework.Integrations
     internal class TimedIntegrationScopeFactory : IIntegrationScopeFactory
     {
         private readonly IIntegrationScopeMIFDbContextResolver integrationMIFDbContextResolver;
-        private readonly IMIFConfigResolver mifConfigResolver;
         private readonly IMIFDbContextFactory mifDbContextFactory;
-        private readonly IMIFConfigFactory mifConfigFactory;
+        private readonly MIFConfig config;
 
         public TimedIntegrationScopeFactory(IIntegrationScopeMIFDbContextResolver integrationScopeMIFDbContextResolver,
-                                            IMIFConfigResolver mifConfigResolver,
                                             IMIFDbContextFactory mifDbContextFactory,
-                                            IMIFConfigFactory mifConfigFactory)
+                                            MIFConfig config)
         {
             this.integrationMIFDbContextResolver = integrationScopeMIFDbContextResolver;
-            this.mifConfigResolver = mifConfigResolver;
             this.mifDbContextFactory = mifDbContextFactory;
-            this.mifConfigFactory = mifConfigFactory;
+            this.config = config;
         }
 
         public ILifetimeScope Create(Type timedIntegrationType, ILifetimeScope context)
@@ -40,16 +37,13 @@ namespace MAD.IntegrationFramework.Integrations
             // Register the derived MIFDbContexts which will be used by the TimedIntegration types
             foreach (Type mifDbContextType in this.integrationMIFDbContextResolver.ResolveTypes())
             {
-                builder.Register<object>(scope => this.mifDbContextFactory.Create(mifDbContextType)).InstancePerDependency().As(mifDbContextType);
+                builder.Register<object>(scope => this.mifDbContextFactory.Create(mifDbContextType)).As(mifDbContextType);
             }
 
-            // Register the derived MIFConfig component which will be used by the TimedIntegration types
-            Type derivedMIFConfigType = this.mifConfigResolver.ResolveType();
-
-            if (derivedMIFConfigType == null)
+            if (this.config.GetType() == typeof(MIFConfig))
                 return;
 
-            builder.Register<object>(scope => this.mifConfigFactory.Create()).As(derivedMIFConfigType);
+            builder.Register<object>(scope => this.config).SingleInstance().As(config.GetType());
         }
 
         

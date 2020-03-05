@@ -1,18 +1,19 @@
 ﻿using MAD.IntegrationFramework.Database;
 using System;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.Text;
 
 namespace MAD.IntegrationFramework.Database
 {
-    internal interface IMIFDbContextFactory
+    public interface IMIFDbContextFactory
     {
-        MIFDbContext Create(Type dbContextType);
+        MIFDbContext Create(Type dbContextType, DbConnection dbConnection = null);
     }
 
-    internal interface IMIFDbContextFactory <TDbContext> 
+    public interface IMIFDbContextFactory <TDbContext> 
         where TDbContext : MIFDbContext
     {
-        TDbContext Create();
+        TDbContext Create(DbConnection dbConnection = null);
     }
 }

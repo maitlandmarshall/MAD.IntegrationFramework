@@ -8,6 +8,10 @@ namespace MAD.IntegrationFramework.Integrations
 {
     internal class TimedIntegrationLogDbContext : MIFDbContext
     {
+        public TimedIntegrationLogDbContext(DbContextOptions options) : base(options)
+        {
+        }
+
         public DbSet<TimedIntegrationLog> TimedIntegrationLogs { get; set; }
     }
 }

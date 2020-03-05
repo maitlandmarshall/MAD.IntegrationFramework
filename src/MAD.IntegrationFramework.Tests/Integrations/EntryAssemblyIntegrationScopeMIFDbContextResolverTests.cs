@@ -1,5 +1,6 @@
 ﻿using MAD.IntegrationFramework.Database;
 using MAD.IntegrationFramework.Integrations;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections;
@@ -12,10 +13,30 @@ namespace MAD.IntegrationFramework.Tests.Integrations
     [TestClass]
     public class EntryAssemblyIntegrationScopeMIFDbContextResolverTests
     {
-        private class T1 : MIFDbContext { }
-        private class T2 : MIFDbContext { }
-        internal class T3 : MIFDbContext { }
-        public class T4 : MIFDbContext { }
+        private class T1 : MIFDbContext
+        {
+            public T1(DbContextOptions options) : base(options)
+            {
+            }
+        }
+        private class T2 : MIFDbContext
+        {
+            public T2(DbContextOptions options) : base(options)
+            {
+            }
+        }
+        internal class T3 : MIFDbContext
+        {
+            public T3(DbContextOptions options) : base(options)
+            {
+            }
+        }
+        public class T4 : MIFDbContext
+        {
+            public T4(DbContextOptions options) : base(options)
+            {
+            }
+        }
 
         private ICollection GetResolvedCollection()
         {

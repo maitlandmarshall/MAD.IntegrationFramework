@@ -7,7 +7,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System;
-using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -32,8 +31,8 @@ namespace MAD.IntegrationFramework
         #region HAVE VISIBLE CONSOLE
 
         // P/Invoke declarations for Windows.
-        [DllImport("kernel32.dll")] static extern IntPtr GetConsoleWindow();
-        [DllImport("user32.dll")] static extern bool IsWindowVisible(IntPtr hWnd);
+        [DllImport("kernel32.dll")] private static extern IntPtr GetConsoleWindow();
+        [DllImport("user32.dll")] private static extern bool IsWindowVisible(IntPtr hWnd);
 
         // Indicates if the current process is running:
         //  * on Windows: in a console window visible to the user.
@@ -54,20 +53,21 @@ namespace MAD.IntegrationFramework
         private readonly ILogger logger;
         private readonly IExceptionLogger exceptionLogger;
         private readonly IWebHostFactory webHostFactory;
-        private readonly IMIFConfigFactory mifConfigFactory;
+        private readonly MIFConfig config;
         private readonly TimedIntegrationController timedIntegrationController;
+
         private IWebHost webHost;
 
         public FrameworkContainer(ILogger<FrameworkContainer> logger,
                                   IExceptionLogger exceptionLogger,
                                   IWebHostFactory webHostFactory,
-                                  IMIFConfigFactory mifConfigFactory,
+                                  MIFConfig config,
                                   TimedIntegrationController timedIntegrationController)
         {
             this.logger = logger;
             this.exceptionLogger = exceptionLogger;
             this.webHostFactory = webHostFactory;
-            this.mifConfigFactory = mifConfigFactory;
+            this.config = config;
             this.timedIntegrationController = timedIntegrationController;
             this.serviceCancellationToken = new CancellationTokenSource();
         }
@@ -78,10 +78,8 @@ namespace MAD.IntegrationFramework
 
             try
             {
-                MIFConfig config = this.mifConfigFactory.Create();
-
-                this.logger.LogInformation($"Binding Port: {config.BindingPort}");
-                this.logger.LogInformation($"Binding Path: {config.BindingPath}");
+                this.logger.LogInformation($"Binding Port: {this.config.BindingPort}");
+                this.logger.LogInformation($"Binding Path: {this.config.BindingPath}");
 
                 if (!HaveVisibleConsole())
                 {
@@ -100,7 +98,7 @@ namespace MAD.IntegrationFramework
                 this.logger.LogInformation("Http Server started");
                 this.logger.LogInformation("Starting Timed Integration Service");
 
-                timedIntegrationController.Start();
+                this.timedIntegrationController.Start();
 
                 this.logger.LogInformation("Timed Integration Service started");
 

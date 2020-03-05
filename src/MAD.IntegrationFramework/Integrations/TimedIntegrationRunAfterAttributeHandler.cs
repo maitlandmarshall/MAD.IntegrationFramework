@@ -10,7 +10,7 @@ namespace MAD.IntegrationFramework.Integrations
 {
     internal class TimedIntegrationRunAfterAttributeHandler
     {
-        public bool IsRunning(TimedIntegrationTimer check)
+        public bool IsTimerRunning(TimedIntegrationTimer check)
         {
             return !check.LastFinish.HasValue || check.LastStart > check.LastFinish;
         }
@@ -22,13 +22,13 @@ namespace MAD.IntegrationFramework.Integrations
             if (runAfterAttribute == null)
                 return;
 
-            TimedIntegrationTimer integrationTimerToRunAfter = toWaitFor.FirstOrDefault(y => y.TimedIntegrationType == runAfterAttribute.IntegrationTypeToRunAfter); ;
+            TimedIntegrationTimer integrationTimerToRunAfter = toWaitFor.FirstOrDefault(y => y.TimedIntegrationType == runAfterAttribute.IntegrationTypeToRunAfter);
 
             if (integrationTimerToRunAfter == null)
                 throw new MissingTimedIntegrationException(runAfterAttribute.IntegrationTypeToRunAfter);
 
             // If the interface to run after hasn't completed a first run, or it has started again but hasn't finished
-            if (this.IsRunning(integrationTimerToRunAfter))
+            if (this.IsTimerRunning(integrationTimerToRunAfter))
             {
                 TaskCompletionSource<bool> waitForFinishTaskCompletionSource = new TaskCompletionSource<bool>();
                 integrationTimerToRunAfter.PropertyChanged += InterfaceToRunAfterTimer_PropertyChanged;

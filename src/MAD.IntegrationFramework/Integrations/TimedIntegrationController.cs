@@ -1,4 +1,5 @@
 ﻿using Autofac;
+using MAD.IntegrationFramework.Configuration;
 using MAD.IntegrationFramework.Logging;
 using Microsoft.Extensions.Logging;
 using System;
@@ -19,6 +20,7 @@ namespace MAD.IntegrationFramework.Integrations
         private readonly IIntegrationMetaDataService timedIntegrationMetaDataService;
         private readonly TimedIntegrationExecutionHandler timedIntegrationExecutionHandler;
         private readonly IIntegrationScopeFactory integrationScopeFactory;
+        private readonly IMIFConfigRepository configRepository;
 
         private readonly List<TimedIntegrationTimer> timedIntegrationTimers;
 
@@ -29,7 +31,8 @@ namespace MAD.IntegrationFramework.Integrations
                                           TimedIntegrationRunAfterAttributeHandler timedIntegrationRunAfterAttributeHandler,
                                           IIntegrationMetaDataService timedIntegrationMetaDataService,
                                           TimedIntegrationExecutionHandler timedIntegrationExecutionHandler,
-                                          IIntegrationScopeFactory integrationScopeFactory
+                                          IIntegrationScopeFactory integrationScopeFactory,
+                                          IMIFConfigRepository configRepository
                                           )
         {
             this.logger = logger;
@@ -40,6 +43,7 @@ namespace MAD.IntegrationFramework.Integrations
             this.timedIntegrationMetaDataService = timedIntegrationMetaDataService;
             this.timedIntegrationExecutionHandler = timedIntegrationExecutionHandler;
             this.integrationScopeFactory = integrationScopeFactory;
+            this.configRepository = configRepository;
             this.timedIntegrationTimers = new List<TimedIntegrationTimer>();
         }
 
@@ -56,9 +60,9 @@ namespace MAD.IntegrationFramework.Integrations
                 this.timedIntegrationTimers.Add(timedIntegrationTimer);
             }
 
-            foreach (TimedIntegrationTimer timedInterfaceTimer in this.timedIntegrationTimers)
+            foreach (TimedIntegrationTimer timedIntegrationTimer in this.timedIntegrationTimers)
             {
-                timedInterfaceTimer.Start();
+                timedIntegrationTimer.Start();
             }
         }
 
@@ -75,11 +79,15 @@ namespace MAD.IntegrationFramework.Integrations
                     await this.timedIntegrationRunAfterAttributeHandler.WaitForOthers(serviceTimer, this.timedIntegrationTimers);
 
                     TimedIntegration timedIntegration = scope.Resolve(serviceTimer.TimedIntegrationType) as TimedIntegration;
-
                     this.timedIntegrationMetaDataService.Load(timedIntegration);
 
                     await this.timedIntegrationExecutionHandler.Execute(timedIntegration, serviceTimer);
+
+                    // The service timer interval starts at "run immediately" and then is calculated by the TimedIntegration implementation
                     serviceTimer.Interval = timedIntegration.Interval.TotalMilliseconds;
+
+                    // If the consumer edits the MIFConfig automatically save it.
+                    await this.configRepository.Save(scope.Resolve<MIFConfig>());
                 }
             }
             catch (Exception ex)

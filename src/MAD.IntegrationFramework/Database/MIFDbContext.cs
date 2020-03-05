@@ -9,19 +9,9 @@ namespace MAD.IntegrationFramework.Database
 {
     public abstract class MIFDbContext : DbContext
     {
-        internal event EventHandler<DbContextOptionsBuilder> Configuring;
-
         public DbConnection Connection => this.Database.GetDbConnection();
 
-        public MIFDbContext() : base() { }
         public MIFDbContext(DbContextOptions options) : base(options) { }
-
-        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        {
-            base.OnConfiguring(optionsBuilder);
-
-            this.Configuring?.Invoke(this, optionsBuilder);
-        }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

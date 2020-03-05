@@ -4,7 +4,7 @@ using System.Text;
 
 namespace MAD.IntegrationFramework.Database
 {
-    internal interface IAutomaticMigrationService
+    public interface IAutomaticMigrationService
     {
         void EnsureDatabaseUpToDate(MIFDbContext dbContext);
     }

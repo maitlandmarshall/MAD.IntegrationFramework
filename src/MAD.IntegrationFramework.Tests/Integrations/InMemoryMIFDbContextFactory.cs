@@ -2,28 +2,20 @@
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.Text;
 
 namespace MAD.IntegrationFramework.Tests.Integrations
 {
     internal class InMemoryMIFDbContextFactory : IMIFDbContextFactory
     {
-        public MIFDbContext Create(Type dbContextType)
+        public MIFDbContext Create(Type dbContextType, DbConnection dbConnection = null)
         {
             if (!typeof(MIFDbContext).IsAssignableFrom(dbContextType))
                 throw new ArgumentException($"Parameter {nameof(dbContextType)} must be a type derived from {nameof(MIFDbContext)}.");
 
             MIFDbContext dbContext = Activator.CreateInstance(dbContextType) as MIFDbContext;
-            dbContext.Configuring += this.DbContext_Configuring;
-
-            try
-            {
-                dbContext.Database.EnsureCreated();
-            }
-            finally
-            {
-                dbContext.Configuring -= this.DbContext_Configuring;
-            }
+            dbContext.Database.EnsureCreated();
 
             return dbContext;
         }
@@ -37,9 +29,9 @@ namespace MAD.IntegrationFramework.Tests.Integrations
     internal class InMemoryMIFDbContextFactory<TDbContext> : InMemoryMIFDbContextFactory, IMIFDbContextFactory<TDbContext>
         where TDbContext : MIFDbContext
     {
-        public TDbContext Create()
+        public TDbContext Create(DbConnection dbConnection = null)
         {
-            return this.Create(typeof(TDbContext)) as TDbContext;
+            return this.Create(typeof(TDbContext), dbConnection) as TDbContext;
         }
     }
 }

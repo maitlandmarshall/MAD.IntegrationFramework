@@ -1,52 +1,56 @@
 ﻿using MAD.IntegrationFramework.Configuration;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using System;
+using System.Data.Common;
 
 namespace MAD.IntegrationFramework.Database
 {
     internal class SqlServerMIFDbContextFactory : IMIFDbContextFactory
     {
         private readonly IAutomaticMigrationService automaticMigrationService;
-        private readonly IMIFConfigFactory mifConfigFactory;
+        private readonly MIFConfig config;
+        private readonly static object dbLock = new object();
 
         public SqlServerMIFDbContextFactory(IAutomaticMigrationService automaticMigrationService,
-                                            IMIFConfigFactory mifConfigFactory)
+                                            MIFConfig config)
         {
             this.automaticMigrationService = automaticMigrationService;
-            this.mifConfigFactory = mifConfigFactory;
+            this.config = config;
         }
 
-        public MIFDbContext Create(Type dbContextType)
+        public MIFDbContext Create(Type dbContextType, DbConnection dbConnection = null)
         {
             if (!typeof(MIFDbContext).IsAssignableFrom(dbContextType))
                 throw new ArgumentException($"{nameof(dbContextType)} must be Type {nameof(MIFDbContext)}.");
 
-            MIFDbContext dbContext = Activator.CreateInstance(dbContextType) as MIFDbContext;
-            dbContext.Configuring += this.DbContext_Configuring;
+            if (string.IsNullOrEmpty(this.config.SqlConnectionString))
+                throw new ConnectionStringIsNullOrEmptyException();
 
-            try
-            {
-                dbContext.Database.SetCommandTimeout(TimeSpan.FromMinutes(10));
-                dbContext.Database.EnsureCreated();
+            var optionsBuilder = new DbContextOptionsBuilder();
 
-                this.automaticMigrationService.EnsureDatabaseUpToDate(dbContext);
-            }
-            finally
+            if (dbConnection != null)
+                optionsBuilder.UseSqlServer(dbConnection);
+            else
+                optionsBuilder.UseSqlServer(this.config.SqlConnectionString);
+
+            MIFDbContext dbContext = Activator.CreateInstance(
+                dbContextType,
+                new object[] { optionsBuilder.Options }
+            ) as MIFDbContext;
+
+            dbContext.Database.SetCommandTimeout(TimeSpan.FromMinutes(10));
+            
+            if (dbConnection == null)
             {
-                dbContext.Configuring -= this.DbContext_Configuring;
+                lock (dbLock)
+                {
+                    dbContext.Database.EnsureCreated();
+                    this.automaticMigrationService.EnsureDatabaseUpToDate(dbContext);
+                }
             }
 
             return dbContext;
-        }
-
-        private void DbContext_Configuring(object sender, DbContextOptionsBuilder e)
-        {
-            MIFConfig config = this.mifConfigFactory.Create();
-
-            if (String.IsNullOrEmpty(config.SqlConnectionString))
-                throw new ConnectionStringIsNullOrEmptyException();
-
-            e.UseSqlServer(config.SqlConnectionString);
         }
     }
 
@@ -54,11 +58,12 @@ namespace MAD.IntegrationFramework.Database
         where TDbContext : MIFDbContext
     {
         public SqlServerMIFDbContextFactory(IAutomaticMigrationService automaticMigrationService,
-                                            IMIFConfigFactory mifConfigFactory) : base(automaticMigrationService, mifConfigFactory) { }
+                                            MIFConfig config) : base(automaticMigrationService, config) { }
 
-        public TDbContext Create()
+
+        public TDbContext Create(DbConnection dbConnection = null)
         {
-            return this.Create(typeof(TDbContext)) as TDbContext;
+            return this.Create(typeof(TDbContext), dbConnection) as TDbContext;
         }
     }
 }

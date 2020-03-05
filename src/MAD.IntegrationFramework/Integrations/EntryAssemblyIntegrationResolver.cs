@@ -18,9 +18,9 @@ namespace MAD.IntegrationFramework.Integrations
         public IEnumerable<Type> ResolveTypes (Assembly assembly)
         {
             // Look through the assembly and yield all the classes which inherit from TimedIntegration
-            foreach (Type timedInterfaceType in assembly.GetTypes().Where(y => typeof(TimedIntegration).IsAssignableFrom(y) && !y.IsAbstract))
+            foreach (Type timedIntegrationType in assembly.GetTypes().Where(y => typeof(TimedIntegration).IsAssignableFrom(y) && !y.IsAbstract))
             {
-                yield return timedInterfaceType;
+                yield return timedIntegrationType;
             }
         }
     }

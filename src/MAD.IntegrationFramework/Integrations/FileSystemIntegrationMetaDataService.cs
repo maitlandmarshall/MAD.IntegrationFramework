@@ -5,15 +5,14 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 
 namespace MAD.IntegrationFramework.Integrations
 {
     internal sealed class FileSystemIntegrationMetaDataService : IIntegrationMetaDataService
     {
-        private static object syncToken = new object();
+        private static readonly object syncToken = new object();
 
-        private IRelativeFilePathResolver relativeFilePathResolver;
+        private readonly IRelativeFilePathResolver relativeFilePathResolver;
 
         public FileSystemIntegrationMetaDataService(IRelativeFilePathResolver integrationPathResolver)
         {
@@ -28,22 +27,22 @@ namespace MAD.IntegrationFramework.Integrations
 
         public void Load(TimedIntegration timedIntegration)
         {
-            IEnumerable<MemberInfo> savableMembers = GetSavableMembers(timedIntegration);
+            IEnumerable<MemberInfo> savableMembers = this.GetSavableMembers(timedIntegration);
 
             if (!savableMembers.Any())
                 return;
 
-            string timedInterfaceSettingsFilePath = this.GetMetaDataFilePath(timedIntegration);
+            string timedIntegrationSettingsFilePath = this.GetMetaDataFilePath(timedIntegration);
 
-            if (!File.Exists(timedInterfaceSettingsFilePath))
+            if (!File.Exists(timedIntegrationSettingsFilePath))
                 return;
 
-            string timedInterfaceSettingData = File.ReadAllText(timedInterfaceSettingsFilePath);
+            string timedIntegrationSettingData = File.ReadAllText(timedIntegrationSettingsFilePath);
 
-            if (String.IsNullOrEmpty(timedInterfaceSettingData))
+            if (string.IsNullOrEmpty(timedIntegrationSettingData))
                 return;
 
-            Dictionary<string, object> propertiesToLoad = JsonConvert.DeserializeObject<Dictionary<string, object>>(timedInterfaceSettingData);
+            Dictionary<string, object> propertiesToLoad = JsonConvert.DeserializeObject<Dictionary<string, object>>(timedIntegrationSettingData);
 
             foreach (MemberInfo member in savableMembers)
             {
@@ -64,13 +63,13 @@ namespace MAD.IntegrationFramework.Integrations
             }
         }
 
-        public void Save(TimedIntegration timedInterface)
+        public void Save(TimedIntegration timedIntegration)
         {
             lock (syncToken)
             {
-                Type timedInterfaceType = timedInterface.GetType();
+                Type timedIntegrationType = timedIntegration.GetType();
 
-                IEnumerable<MemberInfo> savableMembers = this.GetSavableMembers(timedInterface);
+                IEnumerable<MemberInfo> savableMembers = this.GetSavableMembers(timedIntegration);
 
                 if (!savableMembers.Any())
                     return;
@@ -85,10 +84,10 @@ namespace MAD.IntegrationFramework.Integrations
                     switch (member)
                     {
                         case PropertyInfo pi:
-                            memberValue = pi.GetValue(timedInterface, null);
+                            memberValue = pi.GetValue(timedIntegration, null);
                             break;
                         case FieldInfo fi:
-                            memberValue = fi.GetValue(timedInterface);
+                            memberValue = fi.GetValue(timedIntegration);
                             break;
                         default:
                             throw new NotSupportedException();
@@ -97,9 +96,9 @@ namespace MAD.IntegrationFramework.Integrations
                     propertiesToSave[memberKey] = memberValue;
                 }
 
-                string timedInterfaceSettingsData = JsonConvert.SerializeObject(propertiesToSave);
+                string timedIntegrationSettingsData = JsonConvert.SerializeObject(propertiesToSave);
 
-                File.WriteAllText(this.GetMetaDataFilePath(timedInterface), timedInterfaceSettingsData);
+                File.WriteAllText(this.GetMetaDataFilePath(timedIntegration), timedIntegrationSettingsData);
             }
         }
 

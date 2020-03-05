@@ -69,7 +69,7 @@ namespace MAD.IntegrationFramework.Integrations
             }
             finally
             {
-                // Save the configuration data after each execution of the TimedInterface
+                // Save the configuration data after each execution of the TimedIntegration
                 this.timedIntegrationMetaDataService.Save(timedIntegration);
 
                 timer.LastFinish = DateTime.Now;

@@ -14,7 +14,7 @@ namespace MAD.IntegrationFramework.Configuration
             builder.RegisterType<FileSystemMIFConfigFactory>().As<IMIFConfigFactory>();
             builder.RegisterType<FileSystemMIFConfigRepository>().As<IMIFConfigRepository>();
 
-            builder.Register<MIFConfig>(context => context.Resolve<IMIFConfigFactory>().Create()).InstancePerDependency().AsSelf();
+            builder.Register<object>(context => context.Resolve<IMIFConfigFactory>().Create()).SingleInstance().As(typeof(MIFConfig));
         }
     }
 }
