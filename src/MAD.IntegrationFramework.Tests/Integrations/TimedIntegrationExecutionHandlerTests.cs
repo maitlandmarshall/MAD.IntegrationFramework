@@ -1,4 +1,5 @@
-﻿using MAD.IntegrationFramework.Integrations;
+﻿using MAD.IntegrationFramework.Database;
+using MAD.IntegrationFramework.Integrations;
 using MAD.IntegrationFramework.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;

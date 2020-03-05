@@ -12,6 +12,7 @@ namespace MAD.IntegrationFramework.Integrations
     {
         public bool IsTimerRunning(TimedIntegrationTimer check)
         {
+            // It has never finished || it has finished before, but has started again and is still running
             return !check.LastFinish.HasValue || check.LastStart > check.LastFinish;
         }
 

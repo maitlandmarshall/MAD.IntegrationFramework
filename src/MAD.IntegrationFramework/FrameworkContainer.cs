@@ -54,7 +54,7 @@ namespace MAD.IntegrationFramework
         private readonly IExceptionLogger exceptionLogger;
         private readonly IWebHostFactory webHostFactory;
         private readonly MIFConfig config;
-        private readonly TimedIntegrationController timedIntegrationController;
+        private readonly TimedIntegrationService TimedIntegrationService;
 
         private IWebHost webHost;
 
@@ -62,13 +62,13 @@ namespace MAD.IntegrationFramework
                                   IExceptionLogger exceptionLogger,
                                   IWebHostFactory webHostFactory,
                                   MIFConfig config,
-                                  TimedIntegrationController timedIntegrationController)
+                                  TimedIntegrationService TimedIntegrationService)
         {
             this.logger = logger;
             this.exceptionLogger = exceptionLogger;
             this.webHostFactory = webHostFactory;
             this.config = config;
-            this.timedIntegrationController = timedIntegrationController;
+            this.TimedIntegrationService = TimedIntegrationService;
             this.serviceCancellationToken = new CancellationTokenSource();
         }
 
@@ -98,7 +98,7 @@ namespace MAD.IntegrationFramework
                 this.logger.LogInformation("Http Server started");
                 this.logger.LogInformation("Starting Timed Integration Service");
 
-                this.timedIntegrationController.Start();
+                this.TimedIntegrationService.Start();
 
                 this.logger.LogInformation("Timed Integration Service started");
 

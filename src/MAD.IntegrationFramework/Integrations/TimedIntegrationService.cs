@@ -8,11 +8,11 @@ using System.Threading.Tasks;
 
 namespace MAD.IntegrationFramework.Integrations
 {
-    internal class TimedIntegrationController
+    internal class TimedIntegrationService
     {
         private readonly object syncToken = new object();
 
-        private readonly ILogger<TimedIntegrationController> logger;
+        private readonly ILogger<TimedIntegrationService> logger;
         private readonly IExceptionLogger exceptionLogger;
         private readonly IIntegrationResolver timedIntegrationTypesResolver;
         private readonly ILifetimeScope lifetimeScope;
@@ -24,7 +24,7 @@ namespace MAD.IntegrationFramework.Integrations
 
         private readonly List<TimedIntegrationTimer> timedIntegrationTimers;
 
-        public TimedIntegrationController(ILogger<TimedIntegrationController> logger,
+        public TimedIntegrationService(ILogger<TimedIntegrationService> logger,
                                           IExceptionLogger exceptionLogger,
                                           IIntegrationResolver timedIntegrationTypesResolver,
                                           ILifetimeScope lifetimeScope,

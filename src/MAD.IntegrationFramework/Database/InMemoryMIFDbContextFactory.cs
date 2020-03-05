@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Data.Common;
 using System.Text;
 
-namespace MAD.IntegrationFramework.Tests.Integrations
+namespace MAD.IntegrationFramework.Database
 {
     internal class InMemoryMIFDbContextFactory : IMIFDbContextFactory
     {
@@ -14,15 +14,17 @@ namespace MAD.IntegrationFramework.Tests.Integrations
             if (!typeof(MIFDbContext).IsAssignableFrom(dbContextType))
                 throw new ArgumentException($"Parameter {nameof(dbContextType)} must be a type derived from {nameof(MIFDbContext)}.");
 
-            MIFDbContext dbContext = Activator.CreateInstance(dbContextType) as MIFDbContext;
+            var optionsBuilder = new DbContextOptionsBuilder();
+            optionsBuilder.UseInMemoryDatabase(dbContextType.Name);
+
+            MIFDbContext dbContext = Activator.CreateInstance(
+                dbContextType,
+                new object[] { optionsBuilder.Options }
+            ) as MIFDbContext;
+
             dbContext.Database.EnsureCreated();
 
             return dbContext;
-        }
-
-        private void DbContext_Configuring(object sender, DbContextOptionsBuilder e)
-        {
-            e.UseInMemoryDatabase(databaseName: "test");
         }
     }
 
