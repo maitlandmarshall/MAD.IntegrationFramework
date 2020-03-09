@@ -8,13 +8,13 @@ using System.Reflection;
 
 namespace MAD.IntegrationFramework.Integrations
 {
-    internal sealed class FileSystemIntegrationMetaDataService : IIntegrationMetaDataService
+    internal sealed class FileSystemIntegrationMetaDataMemento : IIntegrationMetaDataMemento
     {
         private static readonly object syncToken = new object();
 
         private readonly IRelativeFilePathResolver relativeFilePathResolver;
 
-        public FileSystemIntegrationMetaDataService(IRelativeFilePathResolver integrationPathResolver)
+        public FileSystemIntegrationMetaDataMemento(IRelativeFilePathResolver integrationPathResolver)
         {
             this.relativeFilePathResolver = integrationPathResolver;
         }

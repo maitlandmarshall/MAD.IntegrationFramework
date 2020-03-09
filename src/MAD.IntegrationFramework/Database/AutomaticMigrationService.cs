@@ -39,6 +39,8 @@ namespace MAD.IntegrationFramework.Database
 
                 try
                 {
+                    dbContext.Database.EnsureCreated();
+
                     // Loop through each entity defined as a DbSet in the DbContext's Model
                     foreach (IEntityType entityType in dbContext.Model.GetEntityTypes())
                     {

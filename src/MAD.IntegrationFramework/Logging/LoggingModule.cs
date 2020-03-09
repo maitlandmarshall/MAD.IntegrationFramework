@@ -1,9 +1,7 @@
 ﻿using Autofac;
-using MAD.IntegrationFramework.Database;
+using Autofac.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace MAD.IntegrationFramework.Logging
 {
@@ -13,10 +11,12 @@ namespace MAD.IntegrationFramework.Logging
         {
             base.Load(builder);
 
-            builder.RegisterGeneric(typeof(Logger<>)).As(typeof(ILogger<>));
+            ServiceCollection services = new ServiceCollection();
+            services.AddLogging(cfg => cfg.AddConsole());
 
-            builder.RegisterType<LoggerFactory>().As<ILoggerFactory>();
-            builder.RegisterType<ExceptionDbLogger>().As<IExceptionLogger>();            
+            builder.Populate(services);
+
+            builder.RegisterType<ExceptionDbLogger>().As<IExceptionLogger>();
         }
     }
 }

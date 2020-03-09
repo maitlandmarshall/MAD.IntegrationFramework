@@ -13,19 +13,6 @@ using System.Threading.Tasks;
 
 namespace MAD.IntegrationFramework
 {
-    internal sealed class MIFWindowsService : IHostedService
-    {
-        public Task StartAsync(CancellationToken cancellationToken)
-        {
-            return Task.CompletedTask;
-        }
-
-        public async Task StopAsync(CancellationToken cancellationToken)
-        {
-            await MIF.Stop();
-        }
-    }
-
     internal class FrameworkContainer
     {
         #region HAVE VISIBLE CONSOLE
@@ -109,6 +96,8 @@ namespace MAD.IntegrationFramework
                 this.logger.LogError(ex, ex.Message);
                 await this.exceptionLogger.LogException(ex);
 
+                Console.ReadLine();
+
                 throw;
             }
         }
@@ -138,6 +127,19 @@ namespace MAD.IntegrationFramework
                 this.serviceCancellationToken.Cancel();
                 this.serviceCancellationToken.Dispose();
             }
+        }
+    }
+
+    internal sealed class MIFWindowsService : IHostedService
+    {
+        public Task StartAsync(CancellationToken cancellationToken)
+        {
+            return Task.CompletedTask;
+        }
+
+        public async Task StopAsync(CancellationToken cancellationToken)
+        {
+            await MIF.Stop();
         }
     }
 }

@@ -34,13 +34,23 @@ namespace MAD.IntegrationFramework.Configuration
 
             if (!File.Exists(settingsFilePath))
             {
-                return Activator.CreateInstance(typeWhichInheritsFromMIFConfig) as MIFConfig;
+                return this.CreateConfig(typeWhichInheritsFromMIFConfig);
             }
             else
             {
                 string settingsData = File.ReadAllText(settingsFilePath);
-                return JsonConvert.DeserializeObject(settingsData, typeWhichInheritsFromMIFConfig) as MIFConfig;
+                return this.CreateConfig(typeWhichInheritsFromMIFConfig, settingsData);
             }
+        }
+
+        private MIFConfig CreateConfig(Type typeWhichInheritsFromMIFConfig, string settingsData = null)
+        {
+            if (string.IsNullOrEmpty(settingsData))
+            {
+                return Activator.CreateInstance(typeWhichInheritsFromMIFConfig) as MIFConfig;
+            }
+
+            return JsonConvert.DeserializeObject(settingsData, typeWhichInheritsFromMIFConfig) as MIFConfig;
         }
     }
 }

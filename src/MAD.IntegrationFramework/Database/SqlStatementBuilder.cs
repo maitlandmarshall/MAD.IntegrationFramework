@@ -107,11 +107,29 @@ namespace MAD.IntegrationFramework.Database
                     }
 
                     break;
-                case TypeCode.DBNull:
-                case TypeCode.Object:
-                case TypeCode.Empty:
                 default:
-                    throw new NotImplementedException();
+
+                    if (typeof(byte[]).IsAssignableFrom(propertyType))
+                    {
+                        columnBuilder.Append("varbinary");
+
+                        int? binaryMaxLength = property.GetMaxLength();
+
+                        if (binaryMaxLength.HasValue)
+                        {
+                            columnBuilder.Append($"({binaryMaxLength.Value})");
+                        }
+                        else
+                        {
+                            columnBuilder.Append("(max)");
+                        }
+
+                        break;
+                    }
+                    else
+                    {
+                        throw new NotImplementedException();
+                    }
             }
 
             if (property.IsNullable)

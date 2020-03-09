@@ -12,7 +12,7 @@ namespace MAD.IntegrationFramework.Integrations
         {
             base.Load(builder);
 
-            builder.RegisterType<FileSystemIntegrationMetaDataService>().As<IIntegrationMetaDataService>();
+            builder.RegisterType<FileSystemIntegrationMetaDataMemento>().As<IIntegrationMetaDataMemento>();
 
             builder.RegisterType<EntryAssemblyIntegrationResolver>().As<IIntegrationResolver>();
 

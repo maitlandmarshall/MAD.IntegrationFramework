@@ -17,7 +17,7 @@ namespace MAD.IntegrationFramework.Integrations
         private readonly IIntegrationResolver timedIntegrationTypesResolver;
         private readonly ILifetimeScope lifetimeScope;
         private readonly TimedIntegrationRunAfterAttributeHandler timedIntegrationRunAfterAttributeHandler;
-        private readonly IIntegrationMetaDataService timedIntegrationMetaDataService;
+        private readonly IIntegrationMetaDataMemento timedIntegrationMetaDataService;
         private readonly TimedIntegrationExecutionHandler timedIntegrationExecutionHandler;
         private readonly IIntegrationScopeFactory integrationScopeFactory;
         private readonly IMIFConfigRepository configRepository;
@@ -29,7 +29,7 @@ namespace MAD.IntegrationFramework.Integrations
                                           IIntegrationResolver timedIntegrationTypesResolver,
                                           ILifetimeScope lifetimeScope,
                                           TimedIntegrationRunAfterAttributeHandler timedIntegrationRunAfterAttributeHandler,
-                                          IIntegrationMetaDataService timedIntegrationMetaDataService,
+                                          IIntegrationMetaDataMemento timedIntegrationMetaDataService,
                                           TimedIntegrationExecutionHandler timedIntegrationExecutionHandler,
                                           IIntegrationScopeFactory integrationScopeFactory,
                                           IMIFConfigRepository configRepository

@@ -9,10 +9,10 @@ namespace MAD.IntegrationFramework.Integrations
     internal class TimedIntegrationExecutionHandler
     {
         private readonly IMIFDbContextFactory<TimedIntegrationLogDbContext> timedIntegrationLogDbContextFactory;
-        private readonly IIntegrationMetaDataService timedIntegrationMetaDataService;
+        private readonly IIntegrationMetaDataMemento timedIntegrationMetaDataService;
 
         public TimedIntegrationExecutionHandler(IMIFDbContextFactory<TimedIntegrationLogDbContext> timedIntegrationLogDbContextFactory,
-                                                IIntegrationMetaDataService timedIntegrationMetaDataService)
+                                                IIntegrationMetaDataMemento timedIntegrationMetaDataService)
         {
             this.timedIntegrationLogDbContextFactory = timedIntegrationLogDbContextFactory;
             this.timedIntegrationMetaDataService = timedIntegrationMetaDataService;
@@ -56,14 +56,14 @@ namespace MAD.IntegrationFramework.Integrations
                     try
                     {
                         await timedIntegration.Execute();
+
+                        if (scheduledInterface != null)
+                            scheduledInterface.LastRunDateTime = lastRun;
                     }
                     finally
                     {
                         log.EndDateTime = DateTime.Now;
                         await dbContext.SaveChangesAsync();
-
-                        if (scheduledInterface != null)
-                            scheduledInterface.LastRunDateTime = lastRun;
                     }
                 }
             }
