@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.AspNetCore.Mvc.Razor;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
+using Autofac.Extensions.DependencyInjection;
 using System;
 using System.Reflection;
 
@@ -38,7 +39,7 @@ namespace MAD.IntegrationFramework.Http
             services.Configure<RazorViewEngineOptions>(y =>
             {
                 y.ViewLocationFormats.Clear();
-                y.ViewLocationFormats.Add("/Services/Internals/Http/Views/{1}/{0}.cshtml");
+                y.ViewLocationFormats.Add("/Http/Views/{1}/{0}.cshtml");
                 y.ViewLocationFormats.Add("/Views/{1}/{0}.cshtml");
 
                 y.FileProviders.Add(new EmbeddedFileProvider(typeof(Startup).Assembly));

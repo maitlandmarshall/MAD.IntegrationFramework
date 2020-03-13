@@ -12,7 +12,12 @@ namespace MAD.IntegrationFramework.Logging
             base.Load(builder);
 
             ServiceCollection services = new ServiceCollection();
-            services.AddLogging(cfg => cfg.AddConsole());
+            services.AddLogging(cfg => 
+                cfg
+                    .AddFilter("Microsoft", LogLevel.Warning)
+                    .AddFilter("System", LogLevel.Warning)
+                    .AddConsole()
+            );
 
             builder.Populate(services);
 

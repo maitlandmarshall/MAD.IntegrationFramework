@@ -49,13 +49,13 @@ namespace MAD.IntegrationFramework
                                   IExceptionLogger exceptionLogger,
                                   IWebHostFactory webHostFactory,
                                   MIFConfig config,
-                                  TimedIntegrationService TimedIntegrationService)
+                                  TimedIntegrationService timedIntegrationService)
         {
             this.logger = logger;
             this.exceptionLogger = exceptionLogger;
             this.webHostFactory = webHostFactory;
             this.config = config;
-            this.TimedIntegrationService = TimedIntegrationService;
+            this.TimedIntegrationService = timedIntegrationService;
             this.serviceCancellationToken = new CancellationTokenSource();
         }
 
