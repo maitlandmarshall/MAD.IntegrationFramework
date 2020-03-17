@@ -6,7 +6,7 @@ using System.Data.Common;
 
 namespace MAD.IntegrationFramework.Database
 {
-    internal class SqlServerMIFDbContextFactory : IMIFDbContextFactory
+    public class SqlServerMIFDbContextFactory : IMIFDbContextFactory
     {
         private readonly MIFConfig config;
         private readonly Func<MIFDbContextBuilder> dbContextBuilderFactory;
@@ -45,7 +45,7 @@ namespace MAD.IntegrationFramework.Database
         }
     }
 
-    internal class SqlServerMIFDbContextFactory<TDbContext> : SqlServerMIFDbContextFactory, IMIFDbContextFactory<TDbContext>
+    public class SqlServerMIFDbContextFactory<TDbContext> : SqlServerMIFDbContextFactory, IMIFDbContextFactory<TDbContext>
         where TDbContext : MIFDbContext
     {
         public SqlServerMIFDbContextFactory(MIFConfig config, Func<MIFDbContextBuilder> dbContextBuilderFactory) : base(config, dbContextBuilderFactory)
