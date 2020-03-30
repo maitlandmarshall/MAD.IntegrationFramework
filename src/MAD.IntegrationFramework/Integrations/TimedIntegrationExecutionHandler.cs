@@ -1,5 +1,4 @@
 ﻿using MAD.IntegrationFramework.Database;
-using MAD.IntegrationFramework.Logging;
 using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
@@ -24,24 +23,23 @@ namespace MAD.IntegrationFramework.Integrations
 
             try
             {
-                timer.LastStart = DateTime.Now;
+                DateTime lastRun = DateTime.Now;
+
+                timer.LastStart = lastRun;
 
                 // Every time this interface is executed, check if it's enabled.
                 if (!timedIntegration.IsEnabled)
                     return;
 
-                if (scheduledInterface != null && scheduledInterface.LastRunDateTime.HasValue)
+                if (scheduledInterface != null
+                    && scheduledInterface.LastRunDateTime.HasValue
+                    && lastRun < scheduledInterface.NextRunDateTime)
                 {
-                    DateTime now = DateTime.Now;
-
-                    if (now < scheduledInterface.NextRunDateTime)
-                        return;
+                    return;
                 }
 
                 using (TimedIntegrationLogDbContext dbContext = this.timedIntegrationLogDbContextFactory.Create())
                 {
-                    DateTime lastRun = DateTime.Now;
-
                     TimedIntegrationLog log = new TimedIntegrationLog
                     {
                         InterfaceName = timedIntegration.GetType().Name,
