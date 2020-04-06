@@ -5,7 +5,7 @@ using System.Text;
 
 namespace MAD.IntegrationFramework.Tests.Integrations
 {
-    internal class NullIntegrationMetaDataService : IIntegrationMetaDataService
+    internal class NullIntegrationMetaDataService : IIntegrationMetaDataMemento
     {
         public void Load(TimedIntegration timedIntegration)
         {

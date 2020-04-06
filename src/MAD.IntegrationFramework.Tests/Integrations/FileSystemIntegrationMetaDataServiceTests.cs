@@ -22,9 +22,9 @@ namespace MAD.IntegrationFramework.Tests.Integrations
             }
         }
 
-        private FileSystemIntegrationMetaDataService GetService()
+        private FileSystemIntegrationMetaDataMemento GetService()
         {
-            return new FileSystemIntegrationMetaDataService(
+            return new FileSystemIntegrationMetaDataMemento(
                 integrationPathResolver: new TestFilePathResolver()
             );
         }
@@ -46,7 +46,7 @@ namespace MAD.IntegrationFramework.Tests.Integrations
         [TestMethod]
         public void Save_SavableAttributeFields_CreatesSaveFile()
         {
-            FileSystemIntegrationMetaDataService fileSystemIntegrationMetaDataService = this.GetService();
+            FileSystemIntegrationMetaDataMemento fileSystemIntegrationMetaDataService = this.GetService();
 
             TestTimedIntegration testIntegration = new TestTimedIntegration
             {
@@ -63,7 +63,7 @@ namespace MAD.IntegrationFramework.Tests.Integrations
         [TestMethod]
         public void Load_SavableAttributeFields_DateTimesAreEqual()
         {
-            FileSystemIntegrationMetaDataService fileSystemIntegrationMetaDataService = this.GetService();
+            FileSystemIntegrationMetaDataMemento fileSystemIntegrationMetaDataService = this.GetService();
 
             TestTimedIntegration testIntegration = new TestTimedIntegration
             {
