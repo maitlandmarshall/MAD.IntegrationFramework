@@ -17,9 +17,6 @@ namespace MAD.IntegrationFramework
         {
             base.Load(builder);
 
-            builder.RegisterType<DefaultRelativeFilePathResolver>().As<IRelativeFilePathResolver>();
-            builder.RegisterType<EmbeddedResourceService>().AsSelf();
-
             builder.RegisterModule<LoggingModule>();
             builder.RegisterModule<ConfigModule>();
             builder.RegisterModule<DatabaseModule>();

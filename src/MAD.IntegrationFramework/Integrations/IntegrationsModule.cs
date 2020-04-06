@@ -19,8 +19,6 @@ namespace MAD.IntegrationFramework.Integrations
             builder.RegisterType<EntryAssemblyIntegrationScopeMIFDbContextResolver>().As<IIntegrationScopeMIFDbContextResolver>();
             builder.RegisterType<TimedIntegrationScopeFactory>().As<IIntegrationScopeFactory>();
 
-            builder.RegisterType<EntryAssemblyMIFConfigResolver>().As<IMIFConfigResolver>();
-
             builder.RegisterType<TimedIntegrationRunAfterAttributeHandler>().AsSelf();
 
             builder.RegisterType<TimedIntegrationExecutionHandler>().AsSelf();
