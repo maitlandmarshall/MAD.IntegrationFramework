@@ -70,7 +70,34 @@ public class ExampleMIFConfig : MIFConfig
 
 The MAD.IntegrationFramework exposes a web front-end bound to the BindingPort property. By default, you can save / load your MIFConfig meta data by browsing to http://localhost:666/configuration
 
+![Screenshot of config page](https://github.com/maitlandmarshall/MAD.IntegrationFramework/raw/ReadmeUpdate_9-04-2020/wiki/configPage.png)
 
+##### Using your MIFConfig
+
+In order to access the settings in your MIFConfig, simply add it as a constructor parameter and the framework will automatically inject it for you.
+
+```cs
+public class ExampleIntegration : TimedIntegration
+{
+	private readonly ExampleMIFConfig config;
+
+	public override TimeSpan Interval => TimeSpan.FromMinutes(1);
+	public override bool IsEnabled => true;
+
+	public ExampleIntegration(ExampleMIFConfig config)
+	{
+		this.config = config;
+	}
+
+	public override Task Execute()
+	{
+		// Execute your unit of work here. 
+		// Any errors will be automatically logged to the database if a SQL Connection String is provided in the configuration class.
+
+		throw new NotImplementedException();
+	}
+}
+```
 
 Contributing
 ==========
