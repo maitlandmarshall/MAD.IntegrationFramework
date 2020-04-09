@@ -38,7 +38,7 @@ public class ExampleIntegration : TimedIntegration
 }
 ```
 
-#### Configuration
+### Configuration
 
 The framework provides a base MIFConfig class for you to extend. Inherited properties will be automatically saved to a settings.json file next to the executable.
 
@@ -72,7 +72,7 @@ The MAD.IntegrationFramework exposes a web front-end bound to the BindingPort pr
 
 ![Screenshot of config page](https://github.com/maitlandmarshall/MAD.IntegrationFramework/raw/ReadmeUpdate_9-04-2020/wiki/configPage.png)
 
-##### Using your MIFConfig
+#### Using your MIFConfig
 
 In order to access the settings in your MIFConfig, simply add it as a constructor parameter and the framework will automatically inject it for you.
 
