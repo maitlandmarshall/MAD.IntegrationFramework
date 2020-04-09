@@ -55,7 +55,7 @@ public class MIFConfig
 }
 ```
 
-An example of adding new savable properties:
+An example of adding new properties:
 ```cs
 public class ExampleMIFConfig : MIFConfig
 {
@@ -68,7 +68,7 @@ public class ExampleMIFConfig : MIFConfig
 }
 ```
 
-The MAD.IntegrationFramework exposes a web front-end bound to the BindingPort property. By default, you can save / load your MIFConfig meta data by browsing to http://localhost:666/configuration
+The MAD.IntegrationFramework exposes a web frontend bound to the BindingPort property. By default, you can save / load your MIFConfig meta data by browsing to http://localhost:666/configuration
 
 ![Screenshot of config page](https://github.com/maitlandmarshall/MAD.IntegrationFramework/raw/ReadmeUpdate_9-04-2020/wiki/configPage.png)
 
@@ -98,6 +98,26 @@ public class ExampleIntegration : TimedIntegration
 	}
 }
 ```
+
+#### [Savable] Attribute
+Any properties marked with [Savable] inside a TimedIntegration will automatically be saved to a file named [className].json in the name directory of the executable. These properties are saved after Execute completes, regardless of if it was successful.
+
+```cs
+public class ExampleIntegration : TimedIntegration
+{
+	public override TimeSpan Interval => TimeSpan.FromMinutes(1);
+	public override bool IsEnabled => true;
+
+	[Savable]
+	public string AStringToSave { get; set; } 
+
+	public override Task Execute()
+	{
+		throw new NotImplementedException();
+	}
+}
+```
+
 
 Contributing
 ==========
