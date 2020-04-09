@@ -25,16 +25,16 @@ Now the framework will pick up any classes which inherit from TimedIntegration a
 ```cs
 public class ExampleIntegration : TimedIntegration
 {
-	public override TimeSpan Interval => TimeSpan.FromMinutes(1);
-	public override bool IsEnabled => true;
+    public override TimeSpan Interval => TimeSpan.FromMinutes(1);
+    public override bool IsEnabled => true;
 
-	public override Task Execute()
-	{
-		// Execute your unit of work here. 
-		// Any errors will be automatically logged to the database if a SQL Connection String is provided in the configuration class.
+    public override Task Execute()
+    {
+        // Execute your unit of work here. 
+        // Any errors will be automatically logged to the database if a SQL Connection String is provided in the configuration class.
 
-		throw new NotImplementedException();
-	}
+        throw new NotImplementedException();
+    }
 }
 ```
 
@@ -46,12 +46,12 @@ The base MIFConfig:
 ```cs
 public class MIFConfig
 {
-	internal const int DefaultBindingPort = 666;
+    internal const int DefaultBindingPort = 666;
 
-	public string SqlConnectionString { get; set; }
+    public string SqlConnectionString { get; set; }
 
-	public int BindingPort { get; set; } = DefaultBindingPort;
-	public string BindingPath { get; set; }
+    public int BindingPort { get; set; } = DefaultBindingPort;
+    public string BindingPath { get; set; }
 }
 ```
 
@@ -59,12 +59,12 @@ An example of adding new properties:
 ```cs
 public class ExampleMIFConfig : MIFConfig
 {
-	public string EmailAddress { get; set; }
+    public string EmailAddress { get; set; }
 
-	public ExampleMIFConfig()
-	{
-		this.SqlConnectionString = "Server=myServerAddress;Database=myDataBase;User Id=myUsername;Password=myPassword;";
-	}
+    public ExampleMIFConfig()
+    {
+        this.SqlConnectionString = "Server=myServerAddress;Database=myDataBase;User Id=myUsername;Password=myPassword;";
+    }
 }
 ```
 
@@ -79,23 +79,23 @@ In order to access the settings in your MIFConfig, simply add it as a constructo
 ```cs
 public class ExampleIntegration : TimedIntegration
 {
-	private readonly ExampleMIFConfig config;
+    private readonly ExampleMIFConfig config;
 
-	public override TimeSpan Interval => TimeSpan.FromMinutes(1);
-	public override bool IsEnabled => true;
+    public override TimeSpan Interval => TimeSpan.FromMinutes(1);
+    public override bool IsEnabled => true;
 
-	public ExampleIntegration(ExampleMIFConfig config)
-	{
-		this.config = config;
-	}
+    public ExampleIntegration(ExampleMIFConfig config)
+    {
+        this.config = config;
+    }
 
-	public override Task Execute()
-	{
-		// Execute your unit of work here. 
-		// Any errors will be automatically logged to the database if a SQL Connection String is provided in the configuration class.
+    public override Task Execute()
+    {
+        // Execute your unit of work here. 
+        // Any errors will be automatically logged to the database if a SQL Connection String is provided in the configuration class.
 
-		throw new NotImplementedException();
-	}
+        throw new NotImplementedException();
+    }
 }
 ```
 
@@ -105,16 +105,16 @@ Any properties marked with [Savable] inside a TimedIntegration will automaticall
 ```cs
 public class ExampleIntegration : TimedIntegration
 {
-	public override TimeSpan Interval => TimeSpan.FromMinutes(1);
-	public override bool IsEnabled => true;
+    public override TimeSpan Interval => TimeSpan.FromMinutes(1);
+    public override bool IsEnabled => true;
 
-	[Savable]
-	public string AStringToSave { get; set; } 
+    [Savable]
+    public string AStringToSave { get; set; } 
 
-	public override Task Execute()
-	{
-		throw new NotImplementedException();
-	}
+    public override Task Execute()
+    {
+        throw new NotImplementedException();
+    }
 }
 ```
 
