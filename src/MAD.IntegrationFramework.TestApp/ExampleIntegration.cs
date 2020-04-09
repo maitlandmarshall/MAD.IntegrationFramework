@@ -11,6 +11,9 @@ namespace MAD.IntegrationFramework.TestApp
         public override TimeSpan Interval => TimeSpan.FromMinutes(1);
         public override bool IsEnabled => true;
 
+        [Savable]
+        public string AStringToSave { get; set; } 
+
         public override Task Execute()
         {
             // Execute your unit of work here. 
