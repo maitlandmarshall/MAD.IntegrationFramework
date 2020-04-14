@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace MAD.IntegrationFramework.Integrations
 {
-    internal class TimedIntegrationService
+    internal class TimedIntegrationService : IIntegrationService
     {
         private readonly object syncToken = new object();
 
@@ -105,7 +105,7 @@ namespace MAD.IntegrationFramework.Integrations
             }
         }
 
-        internal void Stop()
+        public void Stop()
         {
             foreach (TimedIntegrationTimer timedIntegrationTimers in this.timedIntegrationTimers)
             {

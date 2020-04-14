@@ -14,7 +14,7 @@ namespace MAD.IntegrationFramework.Integrations
 
             builder.RegisterType<FileSystemIntegrationMetaDataMemento>().As<IIntegrationMetaDataMemento>();
 
-            builder.RegisterType<EntryAssemblyIntegrationResolver>().As<IIntegrationResolver>();
+            builder.RegisterType<EntryAssemblyTimedIntegrationResolver>().As<IIntegrationResolver>();
 
             builder.RegisterType<EntryAssemblyIntegrationScopeMIFDbContextResolver>().As<IIntegrationScopeMIFDbContextResolver>();
             builder.RegisterType<TimedIntegrationScopeFactory>().As<IIntegrationScopeFactory>();

@@ -6,7 +6,7 @@ using System.Text;
 
 namespace MAD.IntegrationFramework.Integrations
 {
-    internal class EntryAssemblyIntegrationResolver : IIntegrationResolver
+    internal class EntryAssemblyTimedIntegrationResolver : IIntegrationResolver
     {
         public IEnumerable<Type> ResolveTypes()
         {

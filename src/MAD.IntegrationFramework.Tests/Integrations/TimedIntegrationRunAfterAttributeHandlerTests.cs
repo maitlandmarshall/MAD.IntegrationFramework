@@ -1,4 +1,4 @@
-﻿using MAD.IntegrationFramework.Core;
+﻿using MAD.IntegrationFramework;
 using MAD.IntegrationFramework.Integrations;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;

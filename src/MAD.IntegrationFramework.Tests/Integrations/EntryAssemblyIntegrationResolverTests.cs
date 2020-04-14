@@ -55,7 +55,7 @@ namespace MAD.IntegrationFramework.Tests.Integrations
 
         private ICollection GetResolvedCollection()
         {
-            return new EntryAssemblyIntegrationResolver().ResolveTypes(typeof(T1).Assembly).ToList();
+            return new EntryAssemblyTimedIntegrationResolver().ResolveTypes(typeof(T1).Assembly).ToList();
         }
 
         [TestMethod]

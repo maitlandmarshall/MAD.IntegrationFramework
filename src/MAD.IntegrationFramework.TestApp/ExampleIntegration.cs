@@ -6,15 +6,15 @@ using System.Threading.Tasks;
 
 namespace MAD.IntegrationFramework.TestApp
 {
-    public class ExampleIntegration : TimedIntegration
+    [Daily(StartHour = 8)]
+    public class ExampleIntegration : IIntegration
     {
-        public override TimeSpan Interval => TimeSpan.FromMinutes(1);
-        public override bool IsEnabled => true;
+        public bool IsEnabled => true;
 
         [Savable]
         public string AStringToSave { get; set; } 
 
-        public override Task Execute()
+        public Task Execute()
         {
             // Execute your unit of work here. 
             // Any errors will be automatically logged to the database if a SQL Connection String is provided in the configuration class.

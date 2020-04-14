@@ -1,4 +1,4 @@
-﻿using MAD.IntegrationFramework.Core;
+﻿using MAD.IntegrationFramework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
