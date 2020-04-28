@@ -1,7 +1,5 @@
 ﻿using Autofac;
-using Autofac.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
+using Serilog;
 
 namespace MAD.IntegrationFramework.Logging
 {
@@ -11,17 +9,8 @@ namespace MAD.IntegrationFramework.Logging
         {
             base.Load(builder);
 
-            ServiceCollection services = new ServiceCollection();
-            services.AddLogging(cfg => 
-                cfg
-                    .AddFilter("Microsoft", LogLevel.Warning)
-                    .AddFilter("System", LogLevel.Warning)
-                    .AddConsole()
-            );
-
-            builder.Populate(services);
-
-            builder.RegisterType<ExceptionDbLogger>().As<IExceptionLogger>();
+            builder.RegisterType<LoggerFactory>().AsSelf();
+            builder.Register(y => y.Resolve<LoggerFactory>().Create()).AsImplementedInterfaces();
         }
     }
 }

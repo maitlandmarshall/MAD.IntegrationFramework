@@ -2,7 +2,7 @@
 using MAD.IntegrationFramework.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
-using Microsoft.Extensions.Logging;
+using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,7 +18,7 @@ namespace MAD.IntegrationFramework.Database
         private readonly List<Type> migratedContexts;
         private readonly object syncToken;
 
-        public AutomaticMigrationService(ILogger<AutomaticMigrationService> logger, SqlStatementBuilder sqlBuilder)
+        public AutomaticMigrationService(ILogger logger, SqlStatementBuilder sqlBuilder)
         {
             this.logger = logger;
             this.sqlBuilder = sqlBuilder;
@@ -65,7 +65,7 @@ namespace MAD.IntegrationFramework.Database
                         if (tableExists)
                             continue;
 
-                        this.logger.LogInformation($"Creating {tableName} table");
+                        this.logger.Information("Creating {tableName} table", tableName);
 
                         string createTableQuery = this.sqlBuilder.BuildCreateTableSqlStatementForIEntityType(entityType);
 

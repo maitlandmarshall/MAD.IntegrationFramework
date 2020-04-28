@@ -1,4 +1,5 @@
 ﻿using MAD.IntegrationFramework.Database;
+using Serilog;
 using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
@@ -7,13 +8,13 @@ namespace MAD.IntegrationFramework.Integrations
 {
     internal class TimedIntegrationExecutionHandler
     {
-        private readonly IMIFDbContextFactory<TimedIntegrationLogDbContext> timedIntegrationLogDbContextFactory;
+        private readonly ILogger logger;
         private readonly IIntegrationMetaDataMemento timedIntegrationMetaDataService;
 
-        public TimedIntegrationExecutionHandler(IMIFDbContextFactory<TimedIntegrationLogDbContext> timedIntegrationLogDbContextFactory,
+        public TimedIntegrationExecutionHandler(ILogger logger,
                                                 IIntegrationMetaDataMemento timedIntegrationMetaDataService)
         {
-            this.timedIntegrationLogDbContextFactory = timedIntegrationLogDbContextFactory;
+            this.logger = logger;
             this.timedIntegrationMetaDataService = timedIntegrationMetaDataService;
         }
 
@@ -38,32 +39,16 @@ namespace MAD.IntegrationFramework.Integrations
                     return;
                 }
 
-                using (TimedIntegrationLogDbContext dbContext = this.timedIntegrationLogDbContextFactory.Create())
-                {
-                    TimedIntegrationLog log = new TimedIntegrationLog
-                    {
-                        InterfaceName = timedIntegration.GetType().Name,
-                        StartDateTime = lastRun,
-                        ExecutablePath = Process.GetCurrentProcess().MainModule.FileName,
-                        MachineName = Environment.MachineName
-                    };
+                ILogger integrationLog = this.logger.ForContext("Integration", timedIntegration.GetType().Name);
 
-                    dbContext.TimedIntegrationLogs.Add(log);
-                    await dbContext.SaveChangesAsync();
+                integrationLog.Information("{Integration} has started");
 
-                    try
-                    {
-                        await timedIntegration.Execute();
+                await timedIntegration.Execute();
 
-                        if (scheduledInterface != null)
-                            scheduledInterface.LastRunDateTime = lastRun;
-                    }
-                    finally
-                    {
-                        log.EndDateTime = DateTime.Now;
-                        await dbContext.SaveChangesAsync();
-                    }
-                }
+                if (scheduledInterface != null)
+                    scheduledInterface.LastRunDateTime = lastRun;
+
+                integrationLog.Information("{Integration} has finished");
             }
             finally
             {

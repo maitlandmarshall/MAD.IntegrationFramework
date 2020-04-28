@@ -7,7 +7,7 @@ using MAD.IntegrationFramework.Integrations;
 using MAD.IntegrationFramework.Logging;
 using MAD.IntegrationFramework.Services;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
+using Serilog;
 using System;
 using System.Collections;
 using System.Collections.Generic;

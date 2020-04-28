@@ -1,11 +1,10 @@
 ﻿using MAD.IntegrationFramework.Configuration;
 using MAD.IntegrationFramework.Http;
 using MAD.IntegrationFramework.Integrations;
-using MAD.IntegrationFramework.Logging;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
+using Serilog;
 using System;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -38,21 +37,18 @@ namespace MAD.IntegrationFramework
         private readonly CancellationTokenSource serviceCancellationToken;
 
         private readonly ILogger logger;
-        private readonly IExceptionLogger exceptionLogger;
         private readonly IWebHostFactory webHostFactory;
         private readonly MIFConfig config;
         private readonly TimedIntegrationService TimedIntegrationService;
 
         private IWebHost webHost;
 
-        public FrameworkContainer(ILogger<FrameworkContainer> logger,
-                                  IExceptionLogger exceptionLogger,
+        public FrameworkContainer(ILogger logger,
                                   IWebHostFactory webHostFactory,
                                   MIFConfig config,
                                   TimedIntegrationService timedIntegrationService)
         {
             this.logger = logger;
-            this.exceptionLogger = exceptionLogger;
             this.webHostFactory = webHostFactory;
             this.config = config;
             this.TimedIntegrationService = timedIntegrationService;
@@ -61,12 +57,12 @@ namespace MAD.IntegrationFramework
 
         public async Task Start()
         {
-            this.logger.LogInformation($"MIF initializing {DateTime.Now}");
+            this.logger.Information("MIF initializing");
 
             try
             {
-                this.logger.LogInformation($"Binding Port: {this.config.BindingPort}");
-                this.logger.LogInformation($"Binding Path: {this.config.BindingPath}");
+                this.logger.Information("Binding Port: {bindingPort}", this.config.BindingPort);
+                this.logger.Information("Binding Path: {bindingPath}", this.config.BindingPath);
 
                 if (!HaveVisibleConsole())
                 {
@@ -74,27 +70,26 @@ namespace MAD.IntegrationFramework
                 }
                 else
                 {
-                    this.logger.LogInformation("Running as console");
+                    this.logger.Information("Running as console");
                 }
 
-                this.logger.LogInformation("Starting Http Server");
+                this.logger.Information("Starting Http Server");
 
                 this.webHost = this.webHostFactory.CreateWebHost();
                 await this.webHost.StartAsync(this.serviceCancellationToken.Token);
 
-                this.logger.LogInformation("Http Server started");
-                this.logger.LogInformation("Starting Timed Integration Service");
+                this.logger.Information("Http Server started");
+                this.logger.Information("Starting Timed Integration Service");
 
                 this.TimedIntegrationService.Start();
 
-                this.logger.LogInformation("Timed Integration Service started");
+                this.logger.Information("Timed Integration Service started");
 
                 await Task.Delay(TimeSpan.FromMilliseconds(-1), this.serviceCancellationToken.Token);
             }
             catch (Exception ex)
             {
-                this.logger.LogError(ex, ex.Message);
-                await this.exceptionLogger.LogException(ex);
+                this.logger.Fatal(ex, "MIF failed to start");
 
                 Console.ReadLine();
 
@@ -104,7 +99,7 @@ namespace MAD.IntegrationFramework
 
         private void MountWindowsService()
         {
-            this.logger.LogInformation("Running as service");
+            this.logger.Information("Running as service");
 
             _ = Host.CreateDefaultBuilder()
                     .UseWindowsService()
