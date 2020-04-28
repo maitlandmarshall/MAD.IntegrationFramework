@@ -1,9 +1,8 @@
 ﻿using Autofac;
 using MAD.IntegrationFramework.Configuration;
 using MAD.IntegrationFramework.Database;
+using Serilog;
 using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace MAD.IntegrationFramework.Integrations
 {
@@ -12,14 +11,17 @@ namespace MAD.IntegrationFramework.Integrations
         private readonly IIntegrationScopeMIFDbContextResolver integrationMIFDbContextResolver;
         private readonly IMIFDbContextFactory mifDbContextFactory;
         private readonly MIFConfig config;
+        private readonly ILogger logger;
 
         public TimedIntegrationScopeFactory(IIntegrationScopeMIFDbContextResolver integrationScopeMIFDbContextResolver,
                                             IMIFDbContextFactory mifDbContextFactory,
-                                            MIFConfig config)
+                                            MIFConfig config,
+                                            ILogger logger)
         {
             this.integrationMIFDbContextResolver = integrationScopeMIFDbContextResolver;
             this.mifDbContextFactory = mifDbContextFactory;
             this.config = config;
+            this.logger = logger;
         }
 
         public ILifetimeScope Create(Type timedIntegrationType, ILifetimeScope context)
@@ -43,9 +45,9 @@ namespace MAD.IntegrationFramework.Integrations
             if (this.config.GetType() == typeof(MIFConfig))
                 return;
 
-            builder.Register<object>(scope => this.config).SingleInstance().As(config.GetType());
-        }
+            builder.Register<object>(scope => this.config).SingleInstance().As(this.config.GetType());
 
-        
+            builder.Register(scope => this.logger.ForContext("Integration", timedIntegrationType.Name)).As<ILogger>();
+        }
     }
 }

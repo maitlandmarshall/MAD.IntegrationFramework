@@ -11,6 +11,8 @@ using Microsoft.AspNetCore.Mvc.Razor;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using Serilog;
 using System;
 using System.Reflection;
 
@@ -29,7 +31,10 @@ namespace MAD.IntegrationFramework.Http
         {
             IWebHostBuilder builder = WebHost
                 .CreateDefaultBuilder()
-                .ConfigureServices(services => services.AddAutofac())
+                .UseSerilog()
+                .ConfigureServices(services => services
+                    .AddAutofac()
+                 )
                 .UseStartup<Startup>()
                 .UseIISIntegration();
 

@@ -11,7 +11,7 @@ namespace MAD.IntegrationFramework.TestApp
 
         public ExampleMIFConfig()
         {
-            this.SqlConnectionString = "Server=myServerAddress;Database=myDataBase;User Id=myUsername;Password=myPassword;";
+            
         }
     }
 }

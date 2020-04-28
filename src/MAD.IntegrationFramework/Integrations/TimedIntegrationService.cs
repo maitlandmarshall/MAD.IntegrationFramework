@@ -1,7 +1,6 @@
 ﻿using Autofac;
 using MAD.IntegrationFramework.Configuration;
-using MAD.IntegrationFramework.Logging;
-using Microsoft.Extensions.Logging;
+using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -12,8 +11,7 @@ namespace MAD.IntegrationFramework.Integrations
     {
         private readonly object syncToken = new object();
 
-        private readonly ILogger<TimedIntegrationService> logger;
-        private readonly IExceptionLogger exceptionLogger;
+        private readonly ILogger logger;
         private readonly IIntegrationResolver timedIntegrationTypesResolver;
         private readonly ILifetimeScope lifetimeScope;
         private readonly TimedIntegrationRunAfterAttributeHandler timedIntegrationRunAfterAttributeHandler;
@@ -24,19 +22,16 @@ namespace MAD.IntegrationFramework.Integrations
 
         private readonly List<TimedIntegrationTimer> timedIntegrationTimers;
 
-        public TimedIntegrationService(ILogger<TimedIntegrationService> logger,
-                                          IExceptionLogger exceptionLogger,
-                                          IIntegrationResolver timedIntegrationTypesResolver,
-                                          ILifetimeScope lifetimeScope,
-                                          TimedIntegrationRunAfterAttributeHandler timedIntegrationRunAfterAttributeHandler,
-                                          IIntegrationMetaDataMemento timedIntegrationMetaDataService,
-                                          TimedIntegrationExecutionHandler timedIntegrationExecutionHandler,
-                                          IIntegrationScopeFactory integrationScopeFactory,
-                                          IMIFConfigRepository configRepository
-                                          )
+        public TimedIntegrationService(ILogger logger,
+                                       IIntegrationResolver timedIntegrationTypesResolver,
+                                       ILifetimeScope lifetimeScope,
+                                       TimedIntegrationRunAfterAttributeHandler timedIntegrationRunAfterAttributeHandler,
+                                       IIntegrationMetaDataMemento timedIntegrationMetaDataService,
+                                       TimedIntegrationExecutionHandler timedIntegrationExecutionHandler,
+                                       IIntegrationScopeFactory integrationScopeFactory,
+                                       IMIFConfigRepository configRepository)
         {
             this.logger = logger;
-            this.exceptionLogger = exceptionLogger;
             this.timedIntegrationTypesResolver = timedIntegrationTypesResolver;
             this.lifetimeScope = lifetimeScope;
             this.timedIntegrationRunAfterAttributeHandler = timedIntegrationRunAfterAttributeHandler;
@@ -92,8 +87,7 @@ namespace MAD.IntegrationFramework.Integrations
             }
             catch (Exception ex)
             {
-                this.logger.LogError(ex, ex.Message);
-                await this.exceptionLogger.LogException(ex, serviceTimer.TimedIntegrationType.Name);
+                this.logger.Error(ex, "{Integration} has failed", serviceTimer.TimedIntegrationType.Name);
 
                 // Wait for 6 hours before starting the timer again to prevent error spam
                 // TODO: Think of a better way to do this
