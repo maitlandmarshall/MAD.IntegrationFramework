@@ -10,5 +10,7 @@ namespace MAD.IntegrationFramework.Configuration
 
         public int BindingPort { get; set; } = DefaultBindingPort;
         public string BindingPath { get; set; }
+
+        public string InstrumentationKey { get; set; }
     }
 }

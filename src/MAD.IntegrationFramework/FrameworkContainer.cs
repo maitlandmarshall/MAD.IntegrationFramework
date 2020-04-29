@@ -2,13 +2,14 @@
 using MAD.IntegrationFramework.Http;
 using MAD.IntegrationFramework.Integrations;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 using System;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
+using Autofac.Extensions.DependencyInjection;
 
 namespace MAD.IntegrationFramework
 {
@@ -39,9 +40,10 @@ namespace MAD.IntegrationFramework
         private readonly ILogger logger;
         private readonly IWebHostFactory webHostFactory;
         private readonly MIFConfig config;
-        private readonly TimedIntegrationService TimedIntegrationService;
+        private readonly TimedIntegrationService timedIntegrationService;
 
         private IWebHost webHost;
+        private IHost appHost;
 
         public FrameworkContainer(ILogger logger,
                                   IWebHostFactory webHostFactory,
@@ -51,22 +53,30 @@ namespace MAD.IntegrationFramework
             this.logger = logger;
             this.webHostFactory = webHostFactory;
             this.config = config;
-            this.TimedIntegrationService = timedIntegrationService;
+            this.timedIntegrationService = timedIntegrationService;
             this.serviceCancellationToken = new CancellationTokenSource();
         }
 
         public async Task Start()
         {
-            this.logger.Information("MIF initializing");
+            Log.Logger = this.logger;
 
             try
             {
-                this.logger.Information("Binding Port: {bindingPort}", this.config.BindingPort);
-                this.logger.Information("Binding Path: {bindingPath}", this.config.BindingPath);
+                this.logger.Information("MIF initializing");
+
+                this.appHost = Host.CreateDefaultBuilder()
+                   .UseWindowsService()
+                   .ConfigureServices((hostContext, services) =>
+                   {
+                       services.AddHostedService<MIFWindowsService>();
+                   })
+                   .UseSerilog(this.logger)
+                   .Build();
 
                 if (!HaveVisibleConsole())
                 {
-                    this.MountWindowsService();
+                    this.logger.Information("Running as service");
                 }
                 else
                 {
@@ -74,6 +84,8 @@ namespace MAD.IntegrationFramework
                 }
 
                 this.logger.Information("Starting Http Server");
+                this.logger.Information("Binding Port: {bindingPort}", this.config.BindingPort);
+                this.logger.Information("Binding Path: {bindingPath}", this.config.BindingPath);
 
                 this.webHost = this.webHostFactory.CreateWebHost();
                 await this.webHost.StartAsync(this.serviceCancellationToken.Token);
@@ -81,47 +93,32 @@ namespace MAD.IntegrationFramework
                 this.logger.Information("Http Server started");
                 this.logger.Information("Starting Timed Integration Service");
 
-                this.TimedIntegrationService.Start();
+                this.timedIntegrationService.Start();
 
                 this.logger.Information("Timed Integration Service started");
 
-                await Task.Delay(TimeSpan.FromMilliseconds(-1), this.serviceCancellationToken.Token);
+                await this.appHost.RunAsync(this.serviceCancellationToken.Token);
             }
             catch (Exception ex)
             {
                 this.logger.Fatal(ex, "MIF failed to start");
-
-                Console.ReadLine();
-
                 throw;
             }
-        }
+            finally
+            {
+                this.logger.Information("Stopping Timed Integration Service");
+                this.timedIntegrationService.Stop();
+                this.logger.Information("Timed Integration Service stopped");
 
-        private void MountWindowsService()
-        {
-            this.logger.Information("Running as service");
-
-            _ = Host.CreateDefaultBuilder()
-                    .UseWindowsService()
-                    .ConfigureServices((hostContext, services) =>
-                    {
-                        services.AddHostedService<MIFWindowsService>();
-                    })
-                    .Build()
-                    .RunAsync(this.serviceCancellationToken.Token);
+                this.logger.Information("MIF has stopped");
+                Log.CloseAndFlush();
+            }
         }
 
         public async Task Stop()
         {
-            try
-            {
-                await this.webHost.StopAsync(TimeSpan.FromSeconds(60));
-            }
-            finally
-            {
-                this.serviceCancellationToken.Cancel();
-                this.serviceCancellationToken.Dispose();
-            }
+            this.serviceCancellationToken.Cancel();
+            this.serviceCancellationToken.Dispose();
         }
     }
 

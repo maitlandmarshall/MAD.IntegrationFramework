@@ -10,7 +10,10 @@ namespace MAD.IntegrationFramework.Logging
             base.Load(builder);
 
             builder.RegisterType<LoggerFactory>().AsSelf();
-            builder.Register(y => y.Resolve<LoggerFactory>().Create()).AsImplementedInterfaces();
+
+            builder.Register(y => y.Resolve<LoggerFactory>().Create())
+                .SingleInstance()
+                .AsImplementedInterfaces();
         }
     }
 }

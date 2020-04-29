@@ -16,13 +16,19 @@ namespace MAD.IntegrationFramework.Logging
 
         public ILogger Create()
         {
-            return new LoggerConfiguration()
+            LoggerConfiguration loggerConfiguration = new LoggerConfiguration()
                 .MinimumLevel.Information()
                 .Enrich.FromLogContext()
                 .WriteTo.Console()
-                .WriteTo.Debug()
-                .WriteTo.Conditional(y => !string.IsNullOrEmpty(config.SqlConnectionString), y => y.MSSqlServer(config.SqlConnectionString, LogTableName, autoCreateSqlTable: true))
-                .CreateLogger();
+                .WriteTo.Debug();
+
+            if (!string.IsNullOrEmpty(config.SqlConnectionString))
+                loggerConfiguration.WriteTo.MSSqlServer(config.SqlConnectionString, LogTableName, autoCreateSqlTable: true);
+
+            if (!string.IsNullOrEmpty(config.InstrumentationKey))
+                loggerConfiguration.WriteTo.ApplicationInsights(config.InstrumentationKey, TelemetryConverter.Traces);
+
+            return loggerConfiguration.CreateLogger();
         }
     }
 }
