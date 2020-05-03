@@ -25,6 +25,7 @@ namespace MAD.IntegrationFramework.Logging
             LoggerConfiguration loggerConfiguration = new LoggerConfiguration()
                 .MinimumLevel.Information()
                 .Enrich.FromLogContext()
+                .Enrich.WithMachineName()
                 .Enrich.With<OperationIdEnricher>()
                 .WriteTo.Console()
                 .WriteTo.Debug();
