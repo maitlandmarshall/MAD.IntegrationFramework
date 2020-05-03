@@ -39,16 +39,19 @@ namespace MAD.IntegrationFramework.Integrations
                     return;
                 }
 
-                ILogger integrationLog = this.logger.ForContext("Integration", timedIntegration.GetType().Name);
-
-                integrationLog.Information("{Integration} has started");
+                this.logger.Information("{Integration} has started");
 
                 await timedIntegration.Execute();
 
                 if (scheduledInterface != null)
                     scheduledInterface.LastRunDateTime = lastRun;
 
-                integrationLog.Information("{Integration} has finished");
+                this.logger.Information("{Integration} has finished");
+            }
+            catch (Exception ex)
+            {
+                this.logger.Error(ex, "{Integration} has failed");
+                throw;
             }
             finally
             {

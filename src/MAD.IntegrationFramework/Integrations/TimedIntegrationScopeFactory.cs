@@ -42,12 +42,12 @@ namespace MAD.IntegrationFramework.Integrations
                 builder.Register<object>(scope => this.mifDbContextFactory.Create(mifDbContextType)).As(mifDbContextType);
             }
 
+            builder.Register(scope => this.logger.ForContext("Integration", timedIntegrationType.Name)).AsImplementedInterfaces().SingleInstance();
+
             if (this.config.GetType() == typeof(MIFConfig))
                 return;
 
             builder.Register<object>(scope => this.config).SingleInstance().As(this.config.GetType());
-
-            builder.Register(scope => this.logger.ForContext("Integration", timedIntegrationType.Name)).As<ILogger>();
         }
     }
 }

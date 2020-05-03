@@ -9,7 +9,7 @@ using System;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
-using Autofac.Extensions.DependencyInjection;
+using System.Diagnostics;
 
 namespace MAD.IntegrationFramework
 {
@@ -111,6 +111,7 @@ namespace MAD.IntegrationFramework
                 this.logger.Information("Timed Integration Service stopped");
 
                 this.logger.Information("MIF has stopped");
+
                 Log.CloseAndFlush();
             }
         }

@@ -2,9 +2,10 @@
 using Microsoft.ApplicationInsights.DependencyCollector;
 using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.ApplicationInsights.Extensibility.Implementation;
+using Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector;
 using Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.QuickPulse;
 using Serilog;
-using System.Globalization;
+using System.Collections.Generic;
 
 namespace MAD.IntegrationFramework.Logging
 {
@@ -24,16 +25,17 @@ namespace MAD.IntegrationFramework.Logging
             LoggerConfiguration loggerConfiguration = new LoggerConfiguration()
                 .MinimumLevel.Information()
                 .Enrich.FromLogContext()
+                .Enrich.With<OperationIdEnricher>()
                 .WriteTo.Console()
                 .WriteTo.Debug();
 
-            if (!string.IsNullOrEmpty(config.SqlConnectionString))
-                loggerConfiguration.WriteTo.MSSqlServer(config.SqlConnectionString, LogTableName, autoCreateSqlTable: true);
+            if (!string.IsNullOrEmpty(this.config.SqlConnectionString))
+                loggerConfiguration.WriteTo.MSSqlServer(this.config.SqlConnectionString, LogTableName, autoCreateSqlTable: true);
 
-            if (!string.IsNullOrEmpty(config.InstrumentationKey))
+            if (!string.IsNullOrEmpty(this.config.InstrumentationKey))
             {
                 TelemetryConfiguration telemetryConfiguration = TelemetryConfiguration.CreateDefault();
-                telemetryConfiguration.InstrumentationKey = config.InstrumentationKey;
+                telemetryConfiguration.InstrumentationKey = this.config.InstrumentationKey;
 
                 TelemetryProcessorChainBuilder builder = telemetryConfiguration.TelemetryProcessorChainBuilder;
 
@@ -49,13 +51,39 @@ namespace MAD.IntegrationFramework.Logging
                 quickPulse.Initialize(telemetryConfiguration);
                 quickPulse.RegisterTelemetryProcessor(quickPulseProcessor);
 
-                DependencyTrackingTelemetryModule depModule = new DependencyTrackingTelemetryModule();
+                DependencyTrackingTelemetryModule depModule = this.BuildDependencyTrackingTelemetryModule();
                 depModule.Initialize(telemetryConfiguration);
 
-                loggerConfiguration.WriteTo.ApplicationInsights(telemetryConfiguration, TelemetryConverter.Traces);
+                PerformanceCollectorModule perfCounter = new PerformanceCollectorModule();
+                perfCounter.Initialize(telemetryConfiguration);
+
+                loggerConfiguration.WriteTo.ApplicationInsights(telemetryConfiguration, new ParentOperationIdTraceTelemetryConverter());
             }
 
             return loggerConfiguration.CreateLogger();
+        }
+
+        private DependencyTrackingTelemetryModule BuildDependencyTrackingTelemetryModule()
+        {
+            List<string> excludeComponentCorrelationHttpHeadersOnDomains = new List<string>
+            {
+                "core.windows.net",
+                "core.chinacloudapi.cn",
+                "core.cloudapi.de",
+                "core.usgovcloudapi.net",
+                "localhost",
+                "127.0.0.1"
+            };
+
+            DependencyTrackingTelemetryModule depModule = new DependencyTrackingTelemetryModule();
+
+            foreach (string excludeComponent in excludeComponentCorrelationHttpHeadersOnDomains)
+                depModule.ExcludeComponentCorrelationHttpHeadersOnDomains.Add(excludeComponent);
+
+            depModule.IncludeDiagnosticSourceActivities.Add("Microsoft.Azure.ServiceBus");
+            depModule.IncludeDiagnosticSourceActivities.Add("Microsoft.Azure.EventHubs");
+
+            return depModule;
         }
     }
 }
