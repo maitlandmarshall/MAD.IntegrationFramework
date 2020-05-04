@@ -88,9 +88,8 @@ namespace MAD.IntegrationFramework.Integrations
             }
             catch (Exception)
             {
-                // Wait for 6 hours before starting the timer again to prevent error spam
-                // TODO: Think of a better way to do this
-                await Task.Delay(TimeSpan.FromHours(6));
+                const int minutesToDelayOnExceptions = 60;
+                await Task.Delay(TimeSpan.FromMinutes(minutesToDelayOnExceptions));
             }
             finally
             {
