@@ -1,4 +1,6 @@
 ﻿using MAD.IntegrationFramework.Database;
+using MAD.IntegrationFramework.Logging;
+using Microsoft.ApplicationInsights;
 using Serilog;
 using System;
 using System.Diagnostics;
@@ -39,14 +41,14 @@ namespace MAD.IntegrationFramework.Integrations
                     return;
                 }
 
-                this.logger.Information("{Integration} has started");
+                this.logger.Event("{Integration} has started");
 
                 await timedIntegration.Execute();
 
                 if (scheduledInterface != null)
                     scheduledInterface.LastRunDateTime = lastRun;
 
-                this.logger.Information("{Integration} has finished");
+                this.logger.Event("{Integration} has finished");
             }
             catch (Exception ex)
             {
