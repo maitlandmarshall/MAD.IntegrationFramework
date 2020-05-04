@@ -5,6 +5,7 @@ using MAD.IntegrationFramework.Integrations;
 using MAD.IntegrationFramework.Tests.Configuration;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -62,7 +63,8 @@ namespace MAD.IntegrationFramework.Tests.Integrations
             return new TimedIntegrationScopeFactory(
                 integrationScopeMIFDbContextResolver: new TestIntegrationScopeMIFDbContextResolver(),
                 mifDbContextFactory: new InMemoryMIFDbContextFactory(),
-                config: new BasicMIFConfigFactory().Create()
+                config: new BasicMIFConfigFactory().Create(),
+                logger: Log.Logger
             );
         }
 

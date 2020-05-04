@@ -21,7 +21,7 @@ namespace MAD.IntegrationFramework.Integrations
 
             builder.RegisterType<TimedIntegrationRunAfterAttributeHandler>().AsSelf();
 
-            builder.RegisterType<TimedIntegrationExecutionHandler>().AsSelf();
+            builder.RegisterType<TimedIntegrationExecutionHandler>().InstancePerLifetimeScope().AsSelf();
             builder.RegisterType<TimedIntegrationService>().InstancePerLifetimeScope().AsSelf();
         }
     }

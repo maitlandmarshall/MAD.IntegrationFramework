@@ -3,6 +3,7 @@ using MAD.IntegrationFramework.Configuration;
 using Serilog;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading.Tasks;
 
 namespace MAD.IntegrationFramework.Integrations
@@ -16,7 +17,6 @@ namespace MAD.IntegrationFramework.Integrations
         private readonly ILifetimeScope lifetimeScope;
         private readonly TimedIntegrationRunAfterAttributeHandler timedIntegrationRunAfterAttributeHandler;
         private readonly IIntegrationMetaDataMemento timedIntegrationMetaDataService;
-        private readonly TimedIntegrationExecutionHandler timedIntegrationExecutionHandler;
         private readonly IIntegrationScopeFactory integrationScopeFactory;
         private readonly IMIFConfigRepository configRepository;
 
@@ -27,7 +27,6 @@ namespace MAD.IntegrationFramework.Integrations
                                        ILifetimeScope lifetimeScope,
                                        TimedIntegrationRunAfterAttributeHandler timedIntegrationRunAfterAttributeHandler,
                                        IIntegrationMetaDataMemento timedIntegrationMetaDataService,
-                                       TimedIntegrationExecutionHandler timedIntegrationExecutionHandler,
                                        IIntegrationScopeFactory integrationScopeFactory,
                                        IMIFConfigRepository configRepository)
         {
@@ -36,7 +35,6 @@ namespace MAD.IntegrationFramework.Integrations
             this.lifetimeScope = lifetimeScope;
             this.timedIntegrationRunAfterAttributeHandler = timedIntegrationRunAfterAttributeHandler;
             this.timedIntegrationMetaDataService = timedIntegrationMetaDataService;
-            this.timedIntegrationExecutionHandler = timedIntegrationExecutionHandler;
             this.integrationScopeFactory = integrationScopeFactory;
             this.configRepository = configRepository;
             this.timedIntegrationTimers = new List<TimedIntegrationTimer>();
@@ -63,48 +61,53 @@ namespace MAD.IntegrationFramework.Integrations
 
         private async void TimedIntegrationTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
         {
-            TimedIntegrationTimer serviceTimer = sender as TimedIntegrationTimer;
-            serviceTimer.Stop();
+            TimedIntegrationTimer integrationTimer = sender as TimedIntegrationTimer;
+            integrationTimer.Stop();
+
+            Activity integrationActivity = new Activity(integrationTimer.TimedIntegrationType.Name);
+            integrationActivity.Start();
 
             try
             {
-                using (ILifetimeScope scope = this.integrationScopeFactory.Create(serviceTimer.TimedIntegrationType, this.lifetimeScope))
+                using (ILifetimeScope scope = this.integrationScopeFactory.Create(integrationTimer.TimedIntegrationType, this.lifetimeScope))
                 {
                     // Wait for another TimedIntegration to complete if this TimedIntegration has the [RunAfter] attribute.
-                    await this.timedIntegrationRunAfterAttributeHandler.WaitForOthers(serviceTimer, this.timedIntegrationTimers);
+                    await this.timedIntegrationRunAfterAttributeHandler.WaitForOthers(integrationTimer, this.timedIntegrationTimers);
 
-                    TimedIntegration timedIntegration = scope.Resolve(serviceTimer.TimedIntegrationType) as TimedIntegration;
+                    TimedIntegration timedIntegration = scope.Resolve(integrationTimer.TimedIntegrationType) as TimedIntegration;
                     this.timedIntegrationMetaDataService.Load(timedIntegration);
 
-                    await this.timedIntegrationExecutionHandler.Execute(timedIntegration, serviceTimer);
+                    await scope.Resolve<TimedIntegrationExecutionHandler>().Execute(timedIntegration, integrationTimer);
 
-                    // The service timer interval starts at "run immediately" and then is calculated by the TimedIntegration implementation
-                    serviceTimer.Interval = timedIntegration.Interval.TotalMilliseconds;
+                    // The integration timer interval starts at "run immediately" and then is calculated by the TimedIntegration implementation
+                    integrationTimer.Interval = timedIntegration.Interval.TotalMilliseconds;
 
                     // If the consumer edits the MIFConfig automatically save it.
                     await this.configRepository.Save(scope.Resolve<MIFConfig>());
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                this.logger.Error(ex, "{Integration} has failed", serviceTimer.TimedIntegrationType.Name);
-
                 // Wait for 6 hours before starting the timer again to prevent error spam
                 // TODO: Think of a better way to do this
                 await Task.Delay(TimeSpan.FromHours(6));
             }
             finally
             {
-                serviceTimer.Start();
+                integrationActivity.Stop();
+                integrationTimer.Start();
             }
         }
 
         internal void Stop()
         {
-            foreach (TimedIntegrationTimer timedIntegrationTimers in this.timedIntegrationTimers)
+            foreach (TimedIntegrationTimer integrationTimer in this.timedIntegrationTimers)
             {
-                timedIntegrationTimers.Stop();
-                timedIntegrationTimers.Dispose();
+                if (integrationTimer.IsIntegrationRunning())
+                    this.logger.Information("{Integration} has stopped", integrationTimer.TimedIntegrationType.Name);
+
+                integrationTimer.Stop();
+                integrationTimer.Dispose();
             }
 
             this.timedIntegrationTimers.Clear();

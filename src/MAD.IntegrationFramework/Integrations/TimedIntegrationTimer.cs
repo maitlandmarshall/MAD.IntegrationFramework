@@ -9,6 +9,8 @@ namespace MAD.IntegrationFramework.Integrations
 {
     internal class TimedIntegrationTimer : System.Timers.Timer, INotifyPropertyChanged
     {
+        public event PropertyChangedEventHandler PropertyChanged;
+
         public Type TimedIntegrationType { get; private set; }
 
         private DateTime? lastFinish;
@@ -31,7 +33,12 @@ namespace MAD.IntegrationFramework.Integrations
             this.AutoReset = true;
         }
 
-        public event PropertyChangedEventHandler PropertyChanged;
+        public bool IsIntegrationRunning()
+        {
+            // It has never finished || it has finished before, but has started again and is still running
+            return !this.LastFinish.HasValue || this.LastStart > this.LastFinish;
+        }
+
         protected void OnPropertyChanged([CallerMemberName]string propertyName = "")
         {
             this.PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
