@@ -10,7 +10,7 @@ using System.Text;
 
 namespace MAD.IntegrationFramework.Database
 {
-    internal class AutomaticMigrationService : IAutomaticMigrationService
+    public class AutomaticMigrationService : IAutomaticMigrationService
     {
         private readonly ILogger logger;
         private readonly SqlStatementBuilder sqlBuilder;

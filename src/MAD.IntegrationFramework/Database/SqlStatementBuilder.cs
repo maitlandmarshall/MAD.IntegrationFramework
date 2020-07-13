@@ -7,7 +7,7 @@ using System.Text;
 
 namespace MAD.IntegrationFramework.Database
 {
-    internal class SqlStatementBuilder
+    public class SqlStatementBuilder
     {
         public string BuildCreateTableSqlStatementForIEntityType(IEntityType entityType)
         {

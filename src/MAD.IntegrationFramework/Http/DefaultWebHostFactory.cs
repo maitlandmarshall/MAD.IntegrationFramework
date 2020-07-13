@@ -88,23 +88,10 @@ namespace MAD.IntegrationFramework.Http
                 {
                     manager.FeatureProviders.Add(new InternalControllerFeatureProvider());
                 })
-                .AddControllersAsServices()
                 .AddApplicationPart(Assembly.GetEntryAssembly());
 
-                services.Configure<RazorViewEngineOptions>(y =>
-                {
-                    y.ViewLocationFormats.Clear();
-                    y.ViewLocationFormats.Add("/Http/Views/{1}/{0}.cshtml");
-                    y.ViewLocationFormats.Add("/Views/{1}/{0}.cshtml");
-
-                    y.FileProviders.Add(new EmbeddedFileProvider(Assembly.GetEntryAssembly()));
-                    y.FileProviders.Add(new EmbeddedFileProvider(typeof(Startup).Assembly));
-                });
-
                 ContainerBuilder builder = new ContainerBuilder();
-                builder.RegisterModule<LoggingModule>();
-                builder.RegisterModule<ConfigModule>();
-
+                builder.RegisterModule<FrameworkModule>();
                 builder.Populate(services);
 
                 this.autofacContainer = builder.Build();

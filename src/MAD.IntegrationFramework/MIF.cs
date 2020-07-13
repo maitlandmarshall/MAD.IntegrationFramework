@@ -22,7 +22,9 @@ namespace MAD.IntegrationFramework
     public static class MIF
     {
         internal static IContainer RootDependencyInjectionContainer { get; private set; }
+        internal static MIFStartup Startup { get; private set; }
         private static ILifetimeScope rootScope;
+
 
         public static Task Start<Startup>(MIFStartupProperties properties = null) where Startup : MIFStartup, new()
         {
@@ -38,6 +40,8 @@ namespace MAD.IntegrationFramework
 
         private static async Task Start(MIFStartupProperties properties = null, MIFStartup startup = null)
         {
+            Startup = startup;
+
             ContainerBuilder builder = new ContainerBuilder();
             builder.RegisterModule<FrameworkModule>();
 
