@@ -19,7 +19,7 @@ namespace MAD.IntegrationFramework.Database
 
             // Begin building the CREATE TABLE statement
             StringBuilder queryBuilder = new StringBuilder();
-            queryBuilder.AppendLine($"CREATE TABLE {entityType.GetTableName()}");
+            queryBuilder.AppendLine($"CREATE TABLE [{entityType.GetTableName()}]");
             queryBuilder.AppendLine("(");
 
             queryBuilder.AppendLine(
@@ -38,8 +38,9 @@ namespace MAD.IntegrationFramework.Database
         private static string IPropertyToSqlColumnString(IProperty property)
         {
             StringBuilder columnBuilder = new StringBuilder();
+            columnBuilder.Append("[");
             columnBuilder.Append(property.Name);
-            columnBuilder.Append(" ");
+            columnBuilder.Append("] ");
 
             Type propertyType = property.PropertyInfo.PropertyType;
 
